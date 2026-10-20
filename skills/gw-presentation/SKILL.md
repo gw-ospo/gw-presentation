@@ -20,6 +20,7 @@ Produce slide decks that are brand-coherent and audience-first. The goal is not 
 | `references/pptx.md` | The user asks for PowerPoint |
 | `src/deck-template.html` | Building any HTML deck — start every deck from this file (deck shell, navigation, font-mode detection) |
 | `src/gw-theme.css` | Building any HTML deck — the CSS foundation (tokens, font stacks, element helpers), pasted into the template |
+| `src/build_deck.py` | Building any HTML deck — assembles template + theme + your layout CSS and slides, inlining assets |
 | `src/inline_asset.py` | Putting a brand SVG or logo PNG into a deck (base64 data URI; optional SVG recolor) |
 | `src/render_deck.py` | Checking a finished HTML deck — renders every slide to PNG in both font modes |
 | `src/build-pptx.js` | Building PowerPoint — a complete working PptxGenJS example |
@@ -33,8 +34,8 @@ Run scripts from the skill directory with `python3` (standard library only; `ren
 2. **Plan the narrative before any code.** Write the deck as a sequence of one-line slide intents. Each slide gets one idea. For 3–5 slides, see "Short decks" in `references/layouts.md`.
 3. **Choose a layout per slide** from `references/layouts.md`, based on what the slide must do — not on how much content it has.
 4. **Pick one pattern family for the deck** (chevrons or six-pointed stars; see Graphic elements below) and one secondary accent color at most.
-5. **Build** the HTML deck from `src/deck-template.html` (default) or the PPTX (`references/pptx.md`).
-6. **Render and check:** `python3 src/render_deck.py <deck.html>`, then look at every PNG for text overflow, overlapping boxes, headline wrapping, contrast against the pairings table, and one element per slide. Fix and re-render before delivering.
+5. **Build** the HTML deck with `src/build_deck.py` (default) or the PPTX (`references/pptx.md`).
+6. **Render and check:** `python3 src/render_deck.py <deck.html>`, then look at the contact sheet it prints (every slide, both font modes) and at single slides where needed, for text overflow, overlapping boxes, headline wrapping, contrast against the pairings table, and one element per slide. Fix and re-render before delivering.
 
 ## Philosophy: Presentation Zen first
 
@@ -65,7 +66,7 @@ Full definitions are in `references/brand.md`. The essentials:
 
 The font stacks in `src/gw-theme.css` list the installed brand family names before the substitutes. Pairing two typefaces usually feels best; three is permissible when intentional.
 
-**Two font modes.** A deck renders with Gazzetta where it's installed and with Barlow Condensed everywhere else, and Barlow sets about 1.6× wider and needs heavier weights. The template detects which is available and swaps weights automatically, so: set display weights only with `var(--display-light | --display-weight | --display-strong)`, size headlines to fit in the wider substitute mode, and check both renders. Details: `references/brand.md` §3.
+**Two font modes.** A deck renders with Gazzetta where it's installed and with Barlow Condensed everywhere else, and Barlow sets about 1.6× wider and needs heavier weights. The template detects which is available and swaps weights automatically, so: set display weights only with `var(--display-light | --display-weight | --display-strong)`, write display sizes as `calc(<size>px * var(--display-scale))` (brand mode draws them 1.25× larger to match Barlow's presence), size headlines to fit in the wider substitute mode, and check both renders. Details: `references/brand.md` §3.
 
 ## Graphic elements
 
@@ -76,7 +77,7 @@ Use the **official files in `assets/`** — never draw imitations of chevrons or
 - **Gate crossbar** and **five-pointed star**: CSS fallbacks in `src/gw-theme.css` until official SVGs are added. Small accents usable in either family: crossbar as a single-line divider, the five-pointed star as a single upright accent, never a pattern.
 - **One pattern family per deck, at most one element per slide**, no patterns on content-heavy slides. Plain solid rules and color bands are not graphic elements.
 
-Inline every SVG with `python3 src/inline_asset.py <file> [--fill <color>]`, which prints a base64 `url(...)` for `background-image`; `--fill` gives tone-on-tone variants. Which color goes on which background, and suggestions per slide type: `references/brand.md` §4.
+Inline every SVG with a `{{asset:<file> fill=<color>}}` placeholder (see HTML output below), or by hand with `python3 src/inline_asset.py <file> [--fill <color>]`; `fill` gives tone-on-tone variants. Which color goes on which background, and suggestions per slide type: `references/brand.md` §4.
 
 **Logos** (`assets/logos/`): **first and last slides only** — interior slides carry no logo. Use the GW Engineering lockup (`seas/`), unaltered, in a corner with clear space of ¼ its width; `-rev` versions on dark backgrounds. The bare GW monogram must not stand alone. Details: `references/brand.md` §5.
 
@@ -114,12 +115,15 @@ Deck level:
 
 ## HTML output (default)
 
-Produce one self-contained HTML file, starting from a copy of `src/deck-template.html`:
+Produce one self-contained HTML file. Write two working files — `layout.css` (this deck's CSS from `references/layouts.md`) and `slides.html` (one `<div class="slide …">` per slide, 1280×720 each) — then assemble:
 
-- Paste the whole of `src/gw-theme.css` at the marked spot in the `<style>` block, then add this deck's layout CSS from `references/layouts.md`.
-- Add one `<div class="slide …">` per slide inside `#stage` (1280×720 each). Keep the deck shell CSS, the nav, and the script as they are: they provide scaling, keyboard and click navigation, `#slide=N` links, print layout, and font-mode detection.
-- Trim the Google Fonts link to the families the deck uses.
-- Brand SVGs and logo PNGs inlined with `src/inline_asset.py` (`--img` for logos); no references to local files.
+```bash
+python3 src/build_deck.py --title "…" --css layout.css --slides slides.html --out deck.html --drop-font Oswald
+```
+
+- Reference brand files with placeholders, which the build inlines: `{{asset:assets/battle-flag/gw-blue.svg fill=navy-yard}}` in CSS (becomes a `url(...)`), `{{img:assets/logos/seas/gw-sch-seas-short-2c-rev.png alt="GW Engineering" class="gw-logo"}}` in slides. No other references to local files.
+- `--drop-font` removes Google Fonts families the deck doesn't use (repeatable).
+- The build pastes `src/gw-theme.css` into `src/deck-template.html`, whose shell and script provide scaling, keyboard and click navigation, `#slide=N` links, print layout, and font-mode detection. Don't edit the built file by hand; change the working files and rebuild.
 - Font Awesome 6 via CDN only if icons are used: `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css`.
 - Placeholder images: `https://picsum.photos/seed/<descriptive-keyword>/<width>/<height>`, keyword matching the slide content.
 - Presenter notes, if requested: a `<details>` block per slide, hidden in print.
@@ -138,6 +142,7 @@ Mistakes that have actually happened building GW decks:
 - **Display lines break differently in the two font modes.** Give display text a `max-width` and `text-wrap: balance` (body text: `text-wrap: pretty`) so both modes break into the same, even lines instead of one long line in brand mode and an orphan in substitute mode.
 - **Safari** may ignore user-activated Adobe fonts (it restricts pages to system fonts) and show substitute mode while Chrome shows brand mode. That is expected — it's why both modes must look right.
 - **Hand-made SVG data URIs break** on the `<?xml?>` prolog and the `#` in fill colors. Use `src/inline_asset.py`. Pasting several SVGs as raw `<svg>` markup can also collide on internal pattern IDs; prefer the `url(...)` form.
+- **Hyphenated words split at the hyphen** under `text-wrap: balance` ("know- / how"). Use a non-breaking hyphen (`&#8209;`) or wrap the word in `<span style="white-space: nowrap">`.
 - **Buff text on white** fails contrast (1.6:1). Make labels quieter with size and weight, not with pale color.
 - **Previewing a local deck in an embedded browser pane** may show a static snapshot with scripts disabled, so navigation looks broken. Open the file in a real browser, or serve it (`python3 -m http.server`) and open it via `localhost`.
 - **PPTX:** no `#` in colors, no 8-character hex, never reuse option objects, never convert pixel coordinates — see `references/pptx.md`.

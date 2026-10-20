@@ -2,7 +2,7 @@
 
 Nine layout patterns for 1280×720 HTML slides. Choose the layout for *what the slide must make the audience feel or understand*, not for how much content there is. If content doesn't fit one pattern cleanly, the slide is usually doing too much.
 
-All CSS below assumes the variables and helpers in `src/gw-theme.css`. Font roles (Display, Body, Accent) and sizes are defined in `references/brand.md` §3.
+All CSS below assumes the variables and helpers in `src/gw-theme.css`. Display font sizes are written `calc(<size>px * var(--display-scale))` so brand mode can scale them; keep that form when you change a size. Font roles (Display, Body, Accent) and sizes are defined in `references/brand.md` §3.
 
 ## Contents
 
@@ -63,7 +63,7 @@ The image carries the emotional weight. Use for transitions, scene-setting, or m
 ```html
 <div class="slide slide-image" style="background-image: url('IMAGE_URL'); background-size: cover; background-position: center;">
   <div class="image-overlay">
-    <p class="t-headline t-reversed" style="font-size: 56px;">Your key phrase here.</p>
+    <p class="t-headline t-reversed" style="font-size: calc(56px * var(--display-scale));">Your key phrase here.</p>
   </div>
 </div>
 ```
@@ -90,7 +90,7 @@ One side holds evidence (image, chart, big number, icon cluster); the other tell
   height: 100%;
 }
 .slide-split .visual-side {
-  background: var(--gw-blue);         /* or an image */
+  background: var(--gw-blue);         /* or var(--gw-buff-20), or an image */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,6 +106,9 @@ One side holds evidence (image, chart, big number, icon cluster); the other tell
 ```
 
 Swap the column order in the DOM now and then so the deck doesn't feel monotonous.
+
+- **Between a dark cover and a dark close** (the sandwich), make the visual side light — `--gw-buff-20` with a 3px `--gw-buff` divider — so the middle of the deck reads light.
+- **Titles on the text side** have about 500px of width: 2–3 balanced lines at 48–56px are fine here (the 1-line rule is for full-width titles).
 
 ---
 
@@ -132,7 +135,7 @@ When a number is the whole point, give it room.
 .stat-block { text-align: center; }
 .stat-number {
   font-family: var(--font-display);
-  font-size: 120px;
+  font-size: calc(120px * var(--display-scale));
   font-weight: var(--display-strong);
   color: var(--gw-blue);
   line-height: 1;
@@ -174,7 +177,7 @@ For 3–4 parallel concepts of equal weight — principles, phases, options. Not
   font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
-  color: var(--potomac);
+  color: var(--gw-blue);   /* Potomac on Buff 20% is 4.3:1 — below AA at this size */
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 14px;
@@ -221,7 +224,7 @@ A clean mental reset between major sections.
 }
 .divider-title {
   font-family: var(--font-display-italic);
-  font-size: 56px;
+  font-size: calc(56px * var(--display-scale));
   font-weight: var(--display-weight);
   font-style: italic;
   color: var(--white);
@@ -262,7 +265,7 @@ For content that genuinely needs prose or a short list. Use sparingly — only w
 .slide-title-block { margin-bottom: 36px; }
 .slide-title {
   font-family: var(--font-display);
-  font-size: 52px;
+  font-size: calc(52px * var(--display-scale));
   font-weight: var(--display-weight);
   color: var(--gw-blue);
 }
@@ -277,6 +280,6 @@ A deck of 3–5 slides can't hold cover, dividers, content, and close. From abou
 
 1. **Section dividers** — they mark sections, and a short deck has one.
 2. **Standard content (I)** — fold it into a Split or a Big Idea.
-3. **Repeated patterns** — keep the pattern on the cover only.
+3. **Interior patterns** — keep the pattern on the cover and the close (which may mirror it); drop it everywhere else.
 
 Keep the cover and the close: a 3-slide deck is cover (the question), one content slide (the answer, ideally a Split, Stat Callout, or Full-Bleed Image), and a dark Big Idea close (the takeaway).

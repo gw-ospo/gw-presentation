@@ -72,16 +72,20 @@ var stage = document.getElementById('stage');
 var count = document.getElementById('count');
 
 // Use substitute weights and stacks when Gazzetta isn't available (or when forced).
-(function detectBrandFonts() {
+// Gazzetta is a locally installed font: if present, text measured in it differs from monospace.
+// Check at once (no flash in the common case) and again once all fonts have settled.
+function detectBrandFonts() {
   var forced = /[?&]fonts=substitutes\b/.test(location.search);
   var ctx = document.createElement('canvas').getContext('2d');
-  var probe = 'A skill is a folder of know-how';
+  var probe = 'Hamburgefonstiv 0123456789';
   ctx.font = '100px monospace';
   var mono = ctx.measureText(probe).width;
   ctx.font = '100px "Gazzetta", monospace';
   var hasGazzetta = ctx.measureText(probe).width !== mono;
-  if (forced || !hasGazzetta) document.documentElement.classList.add('gw-substitute-fonts');
-})();
+  document.documentElement.classList.toggle('gw-substitute-fonts', forced || !hasGazzetta);
+}
+detectBrandFonts();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(detectBrandFonts);
 
 function show(i) {
   current = Math.max(0, Math.min(slides.length - 1, i));

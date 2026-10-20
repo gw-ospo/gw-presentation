@@ -46,6 +46,7 @@
   --display-light:  300;   /* large, airy display lines */
   --display-weight: 400;   /* titles, dividers, big ideas */
   --display-strong: 500;   /* big numbers, the heaviest emphasis */
+  --display-scale:  1.25;  /* Gazzetta sets narrow and small: display sizes grow by this */
 }
 
 /* Without Gazzetta (not installed, or Safari's font restrictions), the deck runtime adds this
@@ -60,6 +61,7 @@ html.gw-substitute-fonts {
   --display-light:  400;
   --display-weight: 600;
   --display-strong: 700;
+  --display-scale:  1;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -137,7 +139,7 @@ body {
 }
 
 /* School logo lockup (assets/logos/), 1500×445 source. First and last slides only; position per slide. */
-.gw-logo { position: absolute; width: 220px; height: auto; }
+.gw-logo { position: absolute; left: 56px; bottom: 56px; width: 220px; height: auto; }
 
 /*
   Gate crossbar — CSS fallback until an official SVG is available.

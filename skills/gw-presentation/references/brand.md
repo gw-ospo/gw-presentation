@@ -64,6 +64,11 @@ All digital materials must meet WCAG AA. Use only these combinations — don't g
 | White | GW Blue, Navy Yard, Potomac, Black | Potomac 80%, Row House |
 | Potomac | White | GW Buff 20%, Potomac 20%, Parchment |
 | GW Buff | GW Blue, Navy Yard, Black | *(none — never light text on buff)* |
+| GW Buff 20% (tile and panel fill)\* | GW Blue, Navy Yard, `#1E1E1E`, `#666666` | Potomac (4.3:1) |
+
+\* Not in GW's published matrix; computed for the fill this skill's layouts use (GW Blue 10.4:1, Potomac 4.3:1, `#666666` 5.1:1).
+
+**Icons and other meaningful graphics** need 3:1 against their background (WCAG 1.4.11), so Potomac icons on white or Buff 20% are fine; text next to them still follows the table.
 
 Not in the table means not accessible. In particular, **GW Buff and its tints are never text colors on white** (Buff 80% on white is 1.6:1) — on light slides, use buff only for rules, borders, and fills.
 
@@ -113,9 +118,10 @@ The same deck renders in one of two modes, and both must look right:
 | When | Gazzetta is available to the browser | Gazzetta missing (other machines, Safari), or `?fonts=substitutes` in the URL |
 | Display face | Gazzetta | Barlow Condensed |
 | `--display-light / -weight / -strong` | 300 / 400 / 500 | 400 / 600 / 700 |
+| `--display-scale` | 1.25 | 1 |
 | Headline width | narrower | **~1.6× wider** at the same size |
 
-The deck runtime in `src/deck-template.html` detects Gazzetta and adds `html.gw-substitute-fonts`; `src/gw-theme.css` then swaps the stacks and weight tokens. Always set display weights with the tokens, never raw numbers. Size headlines so they fit in substitute mode (the wider one), constrain them with `max-width` plus `text-wrap: balance` so both modes break into the same lines, and check both with `src/render_deck.py`.
+The deck runtime in `src/deck-template.html` detects Gazzetta and adds `html.gw-substitute-fonts`; `src/gw-theme.css` then swaps the stacks and weight tokens. Always set display weights with the tokens, never raw numbers, and write every display font size as `calc(<size>px * var(--display-scale))`: Gazzetta sets so much narrower and smaller that unscaled brand-mode headlines look undersized next to the substitute rendering. The sizes in the type scale below are the substitute-mode sizes; brand mode draws them 1.25× larger, still narrower than Barlow, so line breaks hold. Size headlines so they fit in substitute mode (the wider one), constrain them with `max-width` plus `text-wrap: balance` so both modes break into the same lines, and check both with `src/render_deck.py`.
 
 ### Google Fonts link
 
@@ -126,6 +132,8 @@ The deck runtime in `src/deck-template.html` detects Gazzetta and adds `html.gw-
 Drop `Oswald` from the link if the deck has no heavy all-caps display moment.
 
 ### Type scale — 1280×720 HTML slides
+
+Display sizes below are multiplied by `--display-scale` (see Two font modes).
 
 | Element | Role | Size | Weight | Notes |
 |---|---|---|---|---|
@@ -225,6 +233,7 @@ Rules:
 - Place logos on plain backgrounds with generous clear space.
 - **School lockup:** treat like the primary logo — corner or left/right-aligned, clear space ¼ of its width. On a 1280×720 slide make it 200–240px wide (helper `.gw-logo`; inline it with `python3 src/inline_asset.py <png> --img` and give it alt text such as "GW Engineering").
 - **Plain background under the logo.** Put it in a corner away from any pattern: with the default right-edge `.star-pattern`, use a left corner; mirror both when the pattern bleeds left.
+- **Default position:** bottom-left, 56px from the left and bottom edges (the `.gw-logo` defaults). Use top-left instead when the bottom of the slide holds a byline or rule that would crowd it; keep ¼ of the logo's width clear of other content on every side.
 - **Monogram:** outside merchandise it must not appear on its own — use it only in visual proximity to the primary, horizontal, or a school/center/institute logo (e.g., the Engineering lockup elsewhere in the deck). Clear space: ¼ of the monogram's width. Minimum width: 20px digital.
 - **Primary logo** (when supplied): place in a corner or left/right-aligned, not centered. Clear space: ¼ of its width. Minimum width: 54px digital.
 - **Horizontal logo** (when supplied): only where the primary logo doesn't fit; centered. Minimum width: 150px digital.
