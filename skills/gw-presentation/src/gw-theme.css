@@ -1,0 +1,123 @@
+/*
+  gw-theme.css — GW brand foundation for 1280×720 HTML slides.
+  Copy this whole file into the deck's <style> block, then add layout CSS
+  from references/layouts.md. Brand definitions: references/brand.md.
+
+  Load the free substitutes in <head> (see references/brand.md §3):
+  Barlow Condensed, Oswald (optional), Nunito Sans, Source Serif 4.
+*/
+
+:root {
+  /* Core brand colors */
+  --gw-blue:    #033C5A;
+  --gw-buff:    #D6BF91;
+  --potomac:    #0075C8;
+  --navy-yard:  #00223E;
+  --white:      #FFFFFF;
+
+  /* Approved tints */
+  --gw-buff-20: #F6F1E8;
+  --gw-buff-50: #E8DDC6;
+  --gw-buff-80: #DAC8A3;
+  --potomac-20: #CCE3F4;
+  --potomac-50: #7FBAE3;
+  --potomac-80: #3391D3;
+
+  /* Secondary accents — at most one per deck */
+  --row-house:  #EF4343;
+  --blossom:    #D1A0B9;
+  --parchment:  #FFEFAE;
+  --blue-fog:   #52C9E8;
+  --patina:     #ADCAB8;
+
+  /* Neutral text */
+  --text-body:    #1E1E1E;
+  --text-caption: #666666;
+
+  /* Type stacks: brand family names first, free substitutes second */
+  --font-display:        'Gazzetta', 'Barlow Condensed', Georgia, serif;
+  --font-display-italic: 'Gazzetta Slanted', 'Barlow Condensed', Georgia, serif;
+  --font-display-heavy:  'Gazzetta', 'Oswald', 'Barlow Condensed', sans-serif;  /* all-caps numerals/stamps only */
+  --font-body:           'Avenir Next', 'Nunito Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-accent:         'Source Serif Pro', 'Source Serif', 'Source Serif 4', Georgia, serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #DDD8D0;  /* warm neutral canvas that echoes the buff family */
+  font-family: var(--font-body);
+  color: var(--text-body);
+}
+
+/* Slide shell */
+.slide {
+  width: 1280px;
+  height: 720px;
+  position: relative;
+  overflow: hidden;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography helpers */
+.t-headline { font-family: var(--font-display); color: var(--gw-blue); line-height: 1.1; }
+.t-body     { font-family: var(--font-body);    color: var(--text-body); line-height: 1.55; }
+.t-accent   { font-family: var(--font-accent);  font-style: italic; color: var(--gw-blue); }
+.t-caption  { font-family: var(--font-body);    color: var(--text-caption); font-size: 15px; }
+
+/* Reversed type (dark backgrounds) */
+.t-reversed           { color: var(--white); }
+.t-reversed-secondary { color: var(--gw-buff); }
+
+/*
+  Chevron ribbon — uses the official SVG from assets/chevrons/ribbon/.
+  Inline the SVG file as a data URI so the deck stays self-contained:
+    .chevron-ribbon { background-image: url("data:image/svg+xml;utf8,<svg …>"); }
+  Chevrons always point right; never rotate or mirror the image.
+*/
+.chevron-ribbon {
+  height: 12px;
+  width: 100%;
+  flex-shrink: 0;
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+}
+
+/*
+  Chevron chip — square anchor from assets/chevrons/chip/, inlined as <svg> or <img>.
+*/
+.chevron-chip { width: 56px; height: 56px; flex-shrink: 0; }
+
+/*
+  Gate crossbar — CSS fallback until an official SVG is available.
+  Single line, single color; never tile into a pattern. One per slide.
+*/
+.gate-crossbar {
+  height: 2px;
+  width: 200px;
+  margin: 0 auto;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--gw-buff) 0px, var(--gw-buff) 9px,
+    transparent    9px, transparent   15px
+  );
+}
+
+/*
+  Five-pointed star — CSS fallback until an official SVG is available.
+  Single accent, one tip straight up; never repeat into a pattern.
+*/
+.star-accent {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  background: var(--gw-buff);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+@media print {
+  body { background: none; }
+  .slide { break-after: page; }
+}
