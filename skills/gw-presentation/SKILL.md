@@ -71,7 +71,7 @@ Use the **official files in `assets/`** — never draw imitations of chevrons or
 
 For HTML, inline SVG assets (as `<svg>` markup or a `data:image/svg+xml` URI) so the deck stays a single self-contained file. Placement rules and suggestions per slide type: `references/brand.md` §4.
 
-**Logos** (`assets/logos/`): use only the official files, unaltered, with clear space of ¼ the logo width. The GW monogram must not stand alone — pair it with a school, center, or institute logo. Use `-rev` versions on dark backgrounds. Details: `references/brand.md` §5.
+**Logos** (`assets/logos/`): use only the official files, unaltered, with clear space of ¼ the logo width. Prefer the GW Engineering lockup (`seas/`); the bare GW monogram must not stand alone. Use `-rev` versions on dark backgrounds. Details: `references/brand.md` §5.
 
 ## Layout menu
 
@@ -132,6 +132,5 @@ Mistakes that have actually happened building GW decks:
 - **Safari** may ignore user-activated Adobe fonts (it restricts pages to system fonts) and fall back to the substitutes, while Chrome renders them. That is expected; the substitutes are the design's safety net.
 - **Condensed display faces** set narrower than the type scale was first tuned for — check headline wrapping and adjust size rather than letting a title run to three lines.
 - **Buff text on white** fails contrast (1.6:1). Make labels quieter with size and weight, not with pale color.
-- **Brand SVG colors** are print conversions, slightly off the screen palette: GW Blue files fill with `#003a5d`/`#003a60`, Potomac with `#0073bb`/`#0080c5`, Blue Fog with `#5ccbf2`. Set the fill to the exact hex from `references/brand.md` when inlining.
 - **PPTX:** no `#` in colors, no 8-character hex, never reuse option objects, never convert pixel coordinates — see `references/pptx.md`.
 - **Synced folders (Box, Dropbox, iCloud):** some tools fail reading files there with "Resource deadlock avoided"; copy the file to a temp directory first.

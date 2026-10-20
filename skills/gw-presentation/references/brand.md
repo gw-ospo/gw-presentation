@@ -135,7 +135,7 @@ These sizes were tuned for a wide serif display face; check headline wrapping af
 
 GW's graphic elements support a composition — they never dominate it. They draw from GW's architecture, campus, and city; their strength comes from consistent, disciplined use.
 
-Official files are in `assets/`. Use them instead of CSS imitations. The gate crossbar and five-pointed star exist only as print files for now, so CSS fallbacks for those two are in `src/gw-theme.css`.
+Official files are in `assets/`. Use them instead of CSS imitations. Their fills have been normalized to the exact hex values in §1 (the files as distributed used slightly different blues), so they match CSS colors on screen. The gate crossbar and five-pointed star exist only as print files for now, so CSS fallbacks for those two are in `src/gw-theme.css`.
 
 | Element | Files | Use |
 |---|---|---|
@@ -186,11 +186,17 @@ Reflects the stars on the D.C. flag. Use individually as a supporting accent, al
 
 ## 5. Logos
 
-Files are in `assets/logos/`: the GW monogram (`gw/`) and the SEAS school logo (`seas/`), each in `1c`, `2c`, `2c-rev` (reversed, for dark backgrounds), `blk`, and `wht-rev` versions.
+Files are in `assets/logos/`, each in `1c`, `2c`, `2c-rev` (reversed, for dark backgrounds), `blk`, and `wht-rev` versions:
+
+- `seas/gw-sch-seas-short-*.png` — the **GW Engineering** school lockup (GW monogram | "Engineering"), 1500×445. The default logo for SEAS decks.
+- `gw/gw-monogram-*.png` — the GW monogram alone.
+
+Rules:
 
 - Use only official logo files; never redraw, recolor, stretch, or add effects. Keep original proportions.
 - Place logos on plain backgrounds with generous clear space.
-- **Monogram:** outside merchandise it must not appear on its own — keep it in visual proximity to the primary, horizontal, or a school/center/institute logo. Clear space: ¼ of the monogram's width. Minimum width: 20px digital.
+- **School lockup:** treat like the primary logo — corner or left/right-aligned, clear space ¼ of its width.
+- **Monogram:** outside merchandise it must not appear on its own — use it only in visual proximity to the primary, horizontal, or a school/center/institute logo (e.g., the Engineering lockup elsewhere in the deck). Clear space: ¼ of the monogram's width. Minimum width: 20px digital.
 - **Primary logo** (when supplied): place in a corner or left/right-aligned, not centered. Clear space: ¼ of its width. Minimum width: 54px digital.
 - **Horizontal logo** (when supplied): only where the primary logo doesn't fit; centered. Minimum width: 150px digital.
 - On dark slides use the `-rev` (reversed) files; on light slides the `2c` or `1c` files.
