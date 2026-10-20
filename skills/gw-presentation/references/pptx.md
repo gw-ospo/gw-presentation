@@ -101,7 +101,7 @@ sl.addImage({
 });
 ```
 
-Keep the SVG's aspect ratio (ribbon viewBox is 159.28 × 12; tile several copies side by side for a full-width ribbon). Logos: use the PNGs in `assets/logos/` with the clear-space and minimum-size rules in `references/brand.md` §5.
+Keep the SVG's aspect ratio (ribbon viewBox is 159.28 × 12; tile several copies side by side for a full-width ribbon). Logos: the GW Engineering lockup PNG from `assets/logos/seas/`, on the first and last slides only, with the clear-space and minimum-size rules in `references/brand.md` §5.
 
 ## Workflow
 

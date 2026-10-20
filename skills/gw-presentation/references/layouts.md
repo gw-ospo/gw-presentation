@@ -15,6 +15,7 @@ All CSS below assumes the variables and helpers in `src/gw-theme.css`. Font role
 - [G. Section Divider](#g-section-divider)
 - [H. Pull Quote](#h-pull-quote)
 - [I. Standard Content with Title](#i-standard-content-with-title)
+- [Short decks](#short-decks)
 
 ---
 
@@ -24,7 +25,7 @@ Sets the mood for the whole deck. Be deliberate — don't default to the first v
 
 **Variant 1 — Dark authority** (conferences, formal talks, large venues)
 - Background: `--gw-blue` or `--navy-yard`
-- Optional texture: six-pointed star pattern (`assets/battle-flag/`) in a tone-on-tone color, bleeding off one edge
+- Optional texture: six-pointed star pattern (`.star-pattern`, recolored tone-on-tone with `src/inline_asset.py --fill`), bleeding off one edge
 - Title: Display 72–88px, white
 - Subtitle or unit name: Body 22px, `--gw-buff`
 - Bottom edge: chevron ribbon (`assets/chevrons/ribbon/gw-buff.svg`) or a 6px solid buff rule, full width
@@ -39,7 +40,7 @@ Sets the mood for the whole deck. Be deliberate — don't default to the first v
 - Overlay: `rgba(3, 60, 90, 0.72)` so white text stays legible
 - Title: white Display, centered or lower-left, max 12 words; no subtitle
 
-A logo, if used, sits in a corner with clear space (see `references/brand.md` §5).
+The logo (GW Engineering lockup, `.gw-logo`) sits in a corner of the cover with clear space, on plain background — the corner opposite the pattern's bleed edge — logos appear on the first and last slides only (see `references/brand.md` §5). Leave room for a presenter name and affiliation in Body type (the byline role) on whichever variant you choose.
 
 ---
 
@@ -51,6 +52,7 @@ The single most important point in the deck. Use once, maybe twice.
 - One phrase: Display 56–72px, `--gw-blue`, centered, max 15 words
 - GW Buff rule: 3px × 100px, centered, above or below the text
 - No bullets, notes, or supporting text. The slide should feel like a pause.
+- **As the closing slide**, the Big Idea may go dark (GW Blue or Navy Yard, white text, buff rule) to complete the deck's dark–light–dark sandwich. A closing slide also carries the logo, and may echo the cover's pattern.
 
 ---
 
@@ -61,7 +63,7 @@ The image carries the emotional weight. Use for transitions, scene-setting, or m
 ```html
 <div class="slide slide-image" style="background-image: url('IMAGE_URL'); background-size: cover; background-position: center;">
   <div class="image-overlay">
-    <p class="t-headline t-reversed" style="font-size: 56px; font-weight: 600;">Your key phrase here.</p>
+    <p class="t-headline t-reversed" style="font-size: 56px;">Your key phrase here.</p>
   </div>
 </div>
 ```
@@ -131,7 +133,7 @@ When a number is the whole point, give it room.
 .stat-number {
   font-family: var(--font-display);
   font-size: 120px;
-  font-weight: 700;
+  font-weight: var(--display-strong);
   color: var(--gw-blue);
   line-height: 1;
 }
@@ -141,6 +143,7 @@ When a number is the whole point, give it room.
   font-weight: 600;
   color: var(--gw-blue);
   margin-top: 10px;
+  line-height: 1.4;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -151,7 +154,7 @@ When a number is the whole point, give it room.
 
 ## F. Tiled Content
 
-For 3–4 parallel concepts of equal weight — principles, phases, options. Not a bullet list in a grid: each tile is a complete thought.
+For 3–4 parallel concepts of equal weight — principles, phases, options. Not a bullet list in a grid: each tile is a complete thought. A title is optional: if the tiles need one, reuse `.slide-title` and `.title-rule` from pattern I above the grid (wrap both in a flex column with the grid).
 
 ```css
 .slide-tiles {
@@ -219,7 +222,7 @@ A clean mental reset between major sections.
 .divider-title {
   font-family: var(--font-display-italic);
   font-size: 56px;
-  font-weight: 400;
+  font-weight: var(--display-weight);
   font-style: italic;
   color: var(--white);
   max-width: 800px;
@@ -260,8 +263,20 @@ For content that genuinely needs prose or a short list. Use sparingly — only w
 .slide-title {
   font-family: var(--font-display);
   font-size: 52px;
-  font-weight: 600;
+  font-weight: var(--display-weight);
   color: var(--gw-blue);
 }
 .title-rule { width: 80px; height: 3px; background: var(--gw-buff); margin-top: 14px; }
 ```
+
+---
+
+## Short decks
+
+A deck of 3–5 slides can't hold cover, dividers, content, and close. From about 6 slides, one section divider is fine if the talk has two real parts. Drop in this order:
+
+1. **Section dividers** — they mark sections, and a short deck has one.
+2. **Standard content (I)** — fold it into a Split or a Big Idea.
+3. **Repeated patterns** — keep the pattern on the cover only.
+
+Keep the cover and the close: a 3-slide deck is cover (the question), one content slide (the answer, ideally a Split, Stat Callout, or Full-Bleed Image), and a dark Big Idea close (the takeaway).

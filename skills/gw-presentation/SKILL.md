@@ -18,18 +18,23 @@ Produce slide decks that are brand-coherent and audience-first. The goal is not 
 | `references/brand.md` | Always, before designing: colors, accessible pairings, typography, graphic-element rules, logo rules |
 | `references/layouts.md` | Choosing and building slide layouts (nine patterns, with CSS) |
 | `references/pptx.md` | The user asks for PowerPoint |
-| `src/gw-theme.css` | Building any HTML deck — the CSS foundation (tokens, font stacks, helpers) |
+| `src/deck-template.html` | Building any HTML deck — start every deck from this file (deck shell, navigation, font-mode detection) |
+| `src/gw-theme.css` | Building any HTML deck — the CSS foundation (tokens, font stacks, element helpers), pasted into the template |
+| `src/inline_asset.py` | Putting a brand SVG or logo PNG into a deck (base64 data URI; optional SVG recolor) |
+| `src/render_deck.py` | Checking a finished HTML deck — renders every slide to PNG in both font modes |
 | `src/build-pptx.js` | Building PowerPoint — a complete working PptxGenJS example |
 | `assets/` | Official brand files: chevrons, six-pointed star pattern, logos |
 
+Run scripts from the skill directory with `python3` (standard library only; `render_deck.py` needs Google Chrome or Chromium).
+
 ## Workflow
 
-1. **Understand the talk.** Audience, setting (lecture hall, conference, workshop), length, and the one message the audience should leave with. Ask if it isn't clear.
-2. **Plan the narrative before any code.** Write the deck as a sequence of one-line slide intents. Each slide gets one idea.
+1. **Understand the talk.** Audience, setting (lecture hall, conference, workshop), length, and the one message the audience should leave with. Ask if it isn't clear; if you can't ask, assume and state your assumptions.
+2. **Plan the narrative before any code.** Write the deck as a sequence of one-line slide intents. Each slide gets one idea. For 3–5 slides, see "Short decks" in `references/layouts.md`.
 3. **Choose a layout per slide** from `references/layouts.md`, based on what the slide must do — not on how much content it has.
-4. **Pick one graphic-element style for the deck** (see Graphic elements below) and one secondary accent color at most.
-5. **Build** the HTML deck (default) or the PPTX (`references/pptx.md`).
-6. **Render and check** every slide: text overflow, overlapping boxes, contrast against the pairings table, one element per slide. Fix before delivering.
+4. **Pick one pattern family for the deck** (chevrons or six-pointed stars; see Graphic elements below) and one secondary accent color at most.
+5. **Build** the HTML deck from `src/deck-template.html` (default) or the PPTX (`references/pptx.md`).
+6. **Render and check:** `python3 src/render_deck.py <deck.html>`, then look at every PNG for text overflow, overlapping boxes, headline wrapping, contrast against the pairings table, and one element per slide. Fix and re-render before delivering.
 
 ## Philosophy: Presentation Zen first
 
@@ -58,20 +63,22 @@ Full definitions are in `references/brand.md`. The essentials:
 | Body | Avenir Next | Nunito Sans | Body, labels, eyebrows, captions |
 | Accent | Source Serif | Source Serif 4 | Sparingly: pull quotes, short callouts |
 
-The font stacks in `src/gw-theme.css` already list the installed brand family names before the substitutes. Pairing two typefaces usually feels best; three is permissible when intentional.
+The font stacks in `src/gw-theme.css` list the installed brand family names before the substitutes. Pairing two typefaces usually feels best; three is permissible when intentional.
+
+**Two font modes.** A deck renders with Gazzetta where it's installed and with Barlow Condensed everywhere else, and Barlow sets about 1.6× wider and needs heavier weights. The template detects which is available and swaps weights automatically, so: set display weights only with `var(--display-light | --display-weight | --display-strong)`, size headlines to fit in the wider substitute mode, and check both renders. Details: `references/brand.md` §3.
 
 ## Graphic elements
 
 Use the **official files in `assets/`** — never draw imitations of chevrons or star patterns in CSS.
 
-- **Chevron ribbon / chip** (`assets/chevrons/`): forward motion. Ribbon under a title or above a footer; chip to anchor a stat or quote. Always pointing right; max three colors per slide; never a chevron background together with chips.
-- **Six-pointed star pattern** (`assets/battle-flag/`): background texture bleeding off the edge on covers and dividers. Never isolated as a badge.
-- **Gate crossbar** and **five-pointed star**: CSS fallbacks in `src/gw-theme.css` until official SVGs are added. Crossbar is a single-line divider; the five-pointed star is a single upright accent, never a pattern.
-- **One pattern per slide, one element style per deck**, and no patterns on content-heavy slides.
+- **Chevron ribbon / chip** (`assets/chevrons/`, helpers `.chevron-ribbon`, `.chevron-chip`): forward motion. Ribbon under a title or along an edge; chip (portrait 3:4) to anchor a stat or quote. Always pointing right; max three colors per slide.
+- **Six-pointed star pattern** (`assets/battle-flag/`, helper `.star-pattern`): tone-on-tone background texture bleeding off one edge on covers, dividers, and the close. Never isolated as a badge.
+- **Gate crossbar** and **five-pointed star**: CSS fallbacks in `src/gw-theme.css` until official SVGs are added. Small accents usable in either family: crossbar as a single-line divider, the five-pointed star as a single upright accent, never a pattern.
+- **One pattern family per deck, at most one element per slide**, no patterns on content-heavy slides. Plain solid rules and color bands are not graphic elements.
 
-For HTML, inline SVG assets (as `<svg>` markup or a `data:image/svg+xml` URI) so the deck stays a single self-contained file. Placement rules and suggestions per slide type: `references/brand.md` §4.
+Inline every SVG with `python3 src/inline_asset.py <file> [--fill <color>]`, which prints a base64 `url(...)` for `background-image`; `--fill` gives tone-on-tone variants. Which color goes on which background, and suggestions per slide type: `references/brand.md` §4.
 
-**Logos** (`assets/logos/`): use only the official files, unaltered, with clear space of ¼ the logo width. Prefer the GW Engineering lockup (`seas/`); the bare GW monogram must not stand alone. Use `-rev` versions on dark backgrounds. Details: `references/brand.md` §5.
+**Logos** (`assets/logos/`): **first and last slides only** — interior slides carry no logo. Use the GW Engineering lockup (`seas/`), unaltered, in a corner with clear space of ¼ its width; `-rev` versions on dark backgrounds. The bare GW monogram must not stand alone. Details: `references/brand.md` §5.
 
 ## Layout menu
 
@@ -87,7 +94,7 @@ For HTML, inline SVG assets (as `<svg>` markup or a `data:image/svg+xml` URI) so
 | H. Pull Quote | A human voice or testimonial |
 | I. Standard Content | Prose or a short list, only when no visual serves |
 
-CSS and sizing for each: `references/layouts.md`.
+CSS and sizing for each, plus what to drop in short decks: `references/layouts.md`.
 
 ## Slide checklist
 
@@ -97,7 +104,7 @@ Run through this for every slide before writing its markup.
 - **Layout:** Does it serve the purpose, or was it just the first that fit? Is there a more powerful option (e.g., full-bleed image instead of text + image)?
 - **Color:** Core palette only, plus at most the deck's one accent? Every text/background pair in the WCAG AA table?
 - **Restraint:** Anything removable without losing the point? Lists ≤ 4 items, ≤ 12 words each, never nested?
-- **Elements:** At most one graphic element, and the same style as the rest of the deck?
+- **Elements:** At most one graphic element, from the deck's pattern family? Logo only if this is the first or last slide?
 
 Deck level:
 
@@ -107,15 +114,14 @@ Deck level:
 
 ## HTML output (default)
 
-Produce one self-contained HTML file:
+Produce one self-contained HTML file, starting from a copy of `src/deck-template.html`:
 
-- All CSS in a `<style>` block: start with the whole of `src/gw-theme.css`, then add layout CSS from `references/layouts.md`.
-- Google Fonts `<link>` for the substitutes in `<head>` (exact URL in `references/brand.md` §3).
-- Brand SVGs inlined; no references to local files.
+- Paste the whole of `src/gw-theme.css` at the marked spot in the `<style>` block, then add this deck's layout CSS from `references/layouts.md`.
+- Add one `<div class="slide …">` per slide inside `#stage` (1280×720 each). Keep the deck shell CSS, the nav, and the script as they are: they provide scaling, keyboard and click navigation, `#slide=N` links, print layout, and font-mode detection.
+- Trim the Google Fonts link to the families the deck uses.
+- Brand SVGs and logo PNGs inlined with `src/inline_asset.py` (`--img` for logos); no references to local files.
 - Font Awesome 6 via CDN only if icons are used: `https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css`.
 - Placeholder images: `https://picsum.photos/seed/<descriptive-keyword>/<width>/<height>`, keyword matching the slide content.
-- Each slide is a `<div class="slide">` at 1280×720, positioned absolutely inside a fixed 1280×720 `#stage` that a script scales (`translate` + `scale`) to fill the viewport.
-- Presentation mode: ArrowRight/ArrowLeft (and Space/PageDown/PageUp) navigation, plus a small floating nav overlay.
 - Presenter notes, if requested: a `<details>` block per slide, hidden in print.
 
 ## PowerPoint output
@@ -126,11 +132,13 @@ Read `references/pptx.md` first. In short: PptxGenJS, `LAYOUT_16x9` (10" × 5.62
 
 Mistakes that have actually happened building GW decks:
 
-- **Showing one slide at a time:** toggle `visibility: hidden/visible` (or a single `.active` class), not `display` — a layout class like `.s2 { display: flex }` out-ranks `.slide { display: none }` and every slide shows at once.
-- **Navigation script scope:** inline `onclick` handlers can't see `let`/`const` declared inside a block; keep the current-slide index at script top level (`var current = 0`) or attach listeners with `addEventListener`.
-- **Gazzetta italic** is a separate family, `Gazzetta Slanted`. Use `var(--font-display-italic)` for italic display text; `font-style: italic` on `Gazzetta` gets a fake slant.
-- **Safari** may ignore user-activated Adobe fonts (it restricts pages to system fonts) and fall back to the substitutes, while Chrome renders them. That is expected; the substitutes are the design's safety net.
-- **Condensed display faces** set narrower than the type scale was first tuned for — check headline wrapping and adjust size rather than letting a title run to three lines.
+- **Don't rewrite the template's slide switching.** It toggles `visibility`, not `display`: a layout class like `.s2 { display: flex }` out-ranks `.slide { display: none }` and every slide shows at once.
+- **Gazzetta is heavy.** Its Regular (400) already reads bold; 600 is ultra-black. Raw `font-weight` numbers on display text look right in one font mode and wrong in the other — use the weight tokens.
+- **Gazzetta italic** is a separate family, `Gazzetta Slanted`. For italic display text use `font-family: var(--font-display-italic); font-style: italic;` — the italic style matches Gazzetta Slanted's real italic (and Barlow's in substitute mode). `font-style: italic` with plain `--font-display` gets a fake slant.
+- **Display lines break differently in the two font modes.** Give display text a `max-width` and `text-wrap: balance` (body text: `text-wrap: pretty`) so both modes break into the same, even lines instead of one long line in brand mode and an orphan in substitute mode.
+- **Safari** may ignore user-activated Adobe fonts (it restricts pages to system fonts) and show substitute mode while Chrome shows brand mode. That is expected — it's why both modes must look right.
+- **Hand-made SVG data URIs break** on the `<?xml?>` prolog and the `#` in fill colors. Use `src/inline_asset.py`. Pasting several SVGs as raw `<svg>` markup can also collide on internal pattern IDs; prefer the `url(...)` form.
 - **Buff text on white** fails contrast (1.6:1). Make labels quieter with size and weight, not with pale color.
+- **Previewing a local deck in an embedded browser pane** may show a static snapshot with scripts disabled, so navigation looks broken. Open the file in a real browser, or serve it (`python3 -m http.server`) and open it via `localhost`.
 - **PPTX:** no `#` in colors, no 8-character hex, never reuse option objects, never convert pixel coordinates — see `references/pptx.md`.
 - **Synced folders (Box, Dropbox, iCloud):** some tools fail reading files there with "Resource deadlock avoided"; copy the file to a temp directory first.

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DECK TITLE</title>
+<!-- Free substitutes. Drop families the deck doesn't use (see references/brand.md §3). -->
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700&family=Oswald:wght@500;600;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap" rel="stylesheet">
+<style>
+/* ==== Paste the whole of src/gw-theme.css here ==== */
+
+/* ==== Deck shell — keep as is ==== */
+html, body { width: 100%; height: 100%; overflow: hidden; }
+#stage {
+  position: absolute; top: 0; left: 0;
+  width: 1280px; height: 720px;
+  transform-origin: 0 0;
+}
+/* One slide at a time: toggle visibility, never display (see SKILL.md Gotchas) */
+#stage .slide { position: absolute; top: 0; left: 0; visibility: hidden; }
+#stage .slide.active { visibility: visible; }
+
+.deck-nav {
+  position: fixed; right: 16px; bottom: 16px; z-index: 10;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 4px;
+  background: var(--navy-yard); color: var(--white);
+  font-family: var(--font-body); font-size: 13px;
+  opacity: 0.25; transition: opacity 0.2s;
+}
+.deck-nav:hover, .deck-nav:focus-within { opacity: 1; }
+.gw-render .deck-nav { display: none; }
+.deck-nav button {
+  background: none; border: 0; color: var(--gw-buff);
+  font-size: 15px; cursor: pointer; padding: 2px 6px;
+}
+
+@media print {
+  html, body { overflow: visible; height: auto; }
+  #stage { position: static; transform: none !important; width: auto; height: auto; }
+  #stage .slide { position: relative; visibility: visible; }
+  .deck-nav { display: none; }
+}
+
+/* ==== Layout CSS for this deck (from references/layouts.md) ==== */
+
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- One <div class="slide …"> per slide. The first one is shown on load. -->
+  <div class="slide">
+  </div>
+
+</div>
+
+<nav class="deck-nav" aria-label="Slide navigation">
+  <button id="prev" aria-label="Previous slide">&#8592;</button>
+  <span id="count"></span>
+  <button id="next" aria-label="Next slide">&#8594;</button>
+</nav>
+
+<script>
+// Deck runtime — keep as is.
+// URL options: #slide=N opens slide N; ?fonts=substitutes forces the free substitute fonts;
+// ?render hides the nav (used by src/render_deck.py).
+if (/[?&]render\b/.test(location.search)) document.documentElement.classList.add('gw-render');
+var current = 0;
+var slides = document.querySelectorAll('#stage .slide');
+var stage = document.getElementById('stage');
+var count = document.getElementById('count');
+
+// Use substitute weights and stacks when Gazzetta isn't available (or when forced).
+(function detectBrandFonts() {
+  var forced = /[?&]fonts=substitutes\b/.test(location.search);
+  var ctx = document.createElement('canvas').getContext('2d');
+  var probe = 'A skill is a folder of know-how';
+  ctx.font = '100px monospace';
+  var mono = ctx.measureText(probe).width;
+  ctx.font = '100px "Gazzetta", monospace';
+  var hasGazzetta = ctx.measureText(probe).width !== mono;
+  if (forced || !hasGazzetta) document.documentElement.classList.add('gw-substitute-fonts');
+})();
+
+function show(i) {
+  current = Math.max(0, Math.min(slides.length - 1, i));
+  for (var k = 0; k < slides.length; k++) slides[k].classList.toggle('active', k === current);
+  count.textContent = (current + 1) + ' / ' + slides.length;
+  try { history.replaceState(null, '', '#slide=' + (current + 1)); } catch (e) { /* some browsers block this on file:// */ }
+}
+function slideFromHash() {
+  var m = /slide=(\d+)/.exec(location.hash);
+  return m ? parseInt(m[1], 10) - 1 : 0;
+}
+function fit() {
+  var s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+  var x = (window.innerWidth - 1280 * s) / 2;
+  var y = (window.innerHeight - 720 * s) / 2;
+  stage.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+}
+
+document.addEventListener('keydown', function (e) {
+  if (['ArrowRight', ' ', 'PageDown'].indexOf(e.key) > -1) { e.preventDefault(); show(current + 1); }
+  if (['ArrowLeft', 'PageUp'].indexOf(e.key) > -1) { e.preventDefault(); show(current - 1); }
+  if (e.key === 'Home') show(0);
+  if (e.key === 'End') show(slides.length - 1);
+});
+document.getElementById('prev').addEventListener('click', function () { show(current - 1); });
+document.getElementById('next').addEventListener('click', function () { show(current + 1); });
+window.addEventListener('hashchange', function () { show(slideFromHash()); });
+window.addEventListener('resize', fit);
+fit();
+show(slideFromHash());
+</script>
+</body>
+</html>

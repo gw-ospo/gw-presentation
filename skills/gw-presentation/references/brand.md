@@ -77,7 +77,7 @@ GW uses three typefaces. Gazzetta and Avenir Next are primary; Source Serif is s
 
 | Role | Brand typeface | Use for | Free substitute |
 |---|---|---|---|
-| Display | **Gazzetta** | Headlines, slide titles, section dividers, big numbers | **Barlow Condensed** (primary); **Oswald** only for heavy all-caps display |
+| Display | **Gazzetta** — a tall, condensed display face with a large x-height | Headlines, slide titles, section dividers, big numbers | **Barlow Condensed** (primary); **Oswald** only for heavy all-caps display |
 | Body | **Avenir Next** | Body copy, subheads, captions, eyebrows, labels, UI text | **Nunito Sans** |
 | Accent | **Source Serif** | Used sparingly: headline emphasis, pull quotes, short callouts | **Source Serif 4** |
 
@@ -98,11 +98,24 @@ Font family names as registered by macOS on a machine with the Adobe fonts activ
 
 | Typeface | Upright family | Italic family | Notes |
 |---|---|---|---|
-| Gazzetta | `Gazzetta` | `Gazzetta Slanted` | Italic is a **separate family**; `font-style: italic` on `Gazzetta` will not find it |
+| Gazzetta | `Gazzetta` | `Gazzetta Slanted` | Italic is a **separate family**; `font-style: italic` on `Gazzetta` will not find it. Weights Thin–Black; Regular (400) already reads bold |
 | Avenir Next | `Avenir Next` | (same family) | macOS system font |
 | Source Serif | `Source Serif Pro` | (same family) | Adobe Fonts registers the older "Pro" name |
 
-Safari restricts web pages to system fonts for privacy, so user-activated Adobe fonts (Gazzetta, Source Serif Pro) may render in Chrome but fall through to the substitutes in Safari. Avenir Next is a system font and renders in both. Check with `document.fonts.check('16px "Gazzetta"')` in the browser console.
+Safari restricts web pages to system fonts for privacy, so user-activated Adobe fonts (Gazzetta, Source Serif Pro) may render in Chrome but fall through to the substitutes in Safari. Avenir Next is a system font and renders in both.
+
+### Two font modes
+
+The same deck renders in one of two modes, and both must look right:
+
+| | Brand mode | Substitute mode |
+|---|---|---|
+| When | Gazzetta is available to the browser | Gazzetta missing (other machines, Safari), or `?fonts=substitutes` in the URL |
+| Display face | Gazzetta | Barlow Condensed |
+| `--display-light / -weight / -strong` | 300 / 400 / 500 | 400 / 600 / 700 |
+| Headline width | narrower | **~1.6× wider** at the same size |
+
+The deck runtime in `src/deck-template.html` detects Gazzetta and adds `html.gw-substitute-fonts`; `src/gw-theme.css` then swaps the stacks and weight tokens. Always set display weights with the tokens, never raw numbers. Size headlines so they fit in substitute mode (the wider one), constrain them with `max-width` plus `text-wrap: balance` so both modes break into the same lines, and check both with `src/render_deck.py`.
 
 ### Google Fonts link
 
@@ -116,10 +129,11 @@ Drop `Oswald` from the link if the deck has no heavy all-caps display moment.
 
 | Element | Role | Size | Weight | Notes |
 |---|---|---|---|---|
-| Cover display title | Display | 72–88px | 600–700 | Line height 1.05; condensed faces can run larger |
-| Slide title | Display | 48–56px | 600 | Left-aligned; no decorative underlines |
-| Section divider title | Display | 56px | 400 italic | Centered; elegant and unhurried |
-| Big stat / number | Display (or Oswald, all-caps/numerals) | 96–140px | 700 | The number IS the message |
+| Cover display title | Display | 80–104px | `--display-weight` | Line height 1.05; ≤ 2 lines in substitute mode |
+| Slide title | Display | 48–60px | `--display-weight` | Left-aligned; no decorative underlines; 1 line in substitute mode |
+| Section divider title | Display italic | 56–64px | `--display-weight` | Centered; elegant and unhurried |
+| Big idea phrase | Display | 64–80px | `--display-weight` | Max 15 words |
+| Big stat / number | Display (or Oswald, all-caps/numerals) | 96–140px | `--display-strong` | The number IS the message |
 | Subheading / eyebrow | Body | 13–14px | 700 | Spaced caps; GW Buff on dark, Potomac on light |
 | Body text | Body | 20–24px | 400 | Line height 1.55 |
 | Caption / label | Body | 14–16px | 400 | `#666666` on light; never competes with body |
@@ -127,7 +141,7 @@ Drop `Oswald` from the link if the deck has no heavy all-caps display moment.
 | Pull quote | Accent | 36–48px | 400 italic | Let it breathe |
 | Gloss / short callout | Accent | 18–22px | 400 italic | Max 12 words |
 
-These sizes were tuned for a wide serif display face; check headline wrapping after rendering, since Gazzetta and Barlow Condensed set narrower.
+Body, accent, and caption sizes are the same in both modes, but check paragraph wrapping in both renders too.
 
 ---
 
@@ -137,20 +151,30 @@ GW's graphic elements support a composition — they never dominate it. They dra
 
 Official files are in `assets/`. Use them instead of CSS imitations. Their fills have been normalized to the exact hex values in §1 (the files as distributed used slightly different blues), so they match CSS colors on screen. The gate crossbar and five-pointed star exist only as print files for now, so CSS fallbacks for those two are in `src/gw-theme.css`.
 
-| Element | Files | Use |
-|---|---|---|
-| Chevron ribbon | `assets/chevrons/ribbon/{gw-blue,gw-buff,potomac}.svg` | Thin horizontal accent beneath a title or above a footer |
-| Chevron chip | `assets/chevrons/chip/{gw-blue,gw-buff,potomac}.svg` | Square anchor beside a pull quote or key stat |
-| Six-pointed star (battle flag) pattern | `assets/battle-flag/{gw-blue,gw-buff,potomac,blue-fog,white}.svg` | Background texture that bleeds off the slide edge |
-| Gate crossbar | CSS fallback `.gate-crossbar` | Single-line divider between text sections |
-| Five-pointed star | CSS fallback `.star-accent` | Single supporting accent |
+| Element | Files | CSS helper | Use |
+|---|---|---|---|
+| Chevron ribbon | `assets/chevrons/ribbon/{gw-blue,gw-buff,potomac}.svg` (159×12 tile) | `.chevron-ribbon` | Thin horizontal accent beneath a title or above a footer |
+| Chevron chip | `assets/chevrons/chip/{gw-blue,gw-buff,potomac}.svg` (portrait, 3:4) | `.chevron-chip` | Anchor beside a pull quote or key stat |
+| Six-pointed star (battle flag) pattern | `assets/battle-flag/{gw-blue,gw-buff,potomac,blue-fog,white}.svg` (207.36×138.24 seamless tile) | `.star-pattern` | Background texture that bleeds off the slide edge |
+| Gate crossbar | — | `.gate-crossbar` (CSS fallback) | Single-line divider between text sections |
+| Five-pointed star | — | `.star-accent` (CSS fallback) | Single supporting accent |
+
+**Inlining.** `python3 src/inline_asset.py <file> [--fill <color>]` prints a base64 `url(...)` for `background-image`. Base64 avoids the two traps of hand-made data URIs: the `<?xml?>` prolog and the unescaped `#` in fill colors. `--fill` recolors to any brand color (single-color elements), which is how to get tone-on-tone variants.
+
+**Tone-on-tone star pattern.** Recolor the pattern one step from the slide background: Navy Yard slide → `gw-blue`; GW Blue slide → `navy-yard`; white slide → `gw-buff-20`. Scale the tile to about 540×360px (the helper does this) — at native size the stars are specks. Fade it toward the text with a mask, as `.star-pattern` does. Solid, high-contrast pattern colors (e.g., buff on blue) belong only on a slide with very little text.
+
+### What counts as a graphic element
+
+- **Graphic elements:** chevrons (ribbon, chip, background), the six-pointed star pattern, the gate crossbar, the five-pointed star.
+- **Not graphic elements:** plain solid rules (the 3px title rule, a 6px cover-edge rule, divider rules), color bands, and photographs. These don't count toward the limits below.
 
 ### Rules for all elements
 
-- **One pattern per slide.** Never combine the gate crossbar, six-pointed star pattern, and five-pointed stars on the same slide.
+- **At most one graphic element per slide.** Never combine the gate crossbar, six-pointed star pattern, and five-pointed stars on the same slide.
+- **One pattern family per deck:** either chevrons or the six-pointed star pattern, used wherever the deck has a pattern (cover, dividers, close). The gate crossbar and the five-pointed star are small accents and may appear in a deck of either family, one per slide.
 - **Single color** for every gate crossbar and star element.
 - **Brand colors only** — core palette and approved accents.
-- **Consistency.** Choose one element style for the deck and carry it through. Avoid patterns on content-heavy slides.
+- **No patterns on content-heavy slides.**
 
 ### Chevrons
 
@@ -174,13 +198,15 @@ Reflects the stars on the D.C. flag. Use individually as a supporting accent, al
 
 ### Suggested placements
 
-| Slide type | Element |
-|---|---|
-| Cover | Tone-on-tone chevron background, or six-pointed star background |
-| Section divider | Chevron ribbon, or gate crossbar as the divider line |
-| Data / text content | Chevron chip anchoring a key stat or pull quote |
-| Closing | Chevron background or a five-pointed star accent |
-| Text-heavy | Gate crossbar only; no pattern backgrounds |
+| Slide type | Chevron deck | Six-pointed star deck |
+|---|---|---|
+| Cover | Chevron ribbon along an edge | Tone-on-tone star pattern bleeding off one edge |
+| Section divider | Chevron ribbon, or gate crossbar | Star pattern, or gate crossbar |
+| Data / text content | Chevron chip anchoring a key stat or quote | Nothing, or a five-pointed star accent |
+| Closing | Chevron ribbon, or a five-pointed star | Star pattern (mirroring the cover), or a five-pointed star |
+| Text-heavy | Gate crossbar only, or nothing | Gate crossbar only, or nothing |
+
+A full-bleed chevron background exists only as a print file for now; use ribbons and chips.
 
 ---
 
@@ -193,9 +219,12 @@ Files are in `assets/logos/`, each in `1c`, `2c`, `2c-rev` (reversed, for dark b
 
 Rules:
 
+- **Logos go on the first and last slides only.** Interior slides carry no logo.
+- This skill ships the GW Engineering lockup. Units outside SEAS fork the skill and swap in their own logo files (see the repository README).
 - Use only official logo files; never redraw, recolor, stretch, or add effects. Keep original proportions.
 - Place logos on plain backgrounds with generous clear space.
-- **School lockup:** treat like the primary logo — corner or left/right-aligned, clear space ¼ of its width.
+- **School lockup:** treat like the primary logo — corner or left/right-aligned, clear space ¼ of its width. On a 1280×720 slide make it 200–240px wide (helper `.gw-logo`; inline it with `python3 src/inline_asset.py <png> --img` and give it alt text such as "GW Engineering").
+- **Plain background under the logo.** Put it in a corner away from any pattern: with the default right-edge `.star-pattern`, use a left corner; mirror both when the pattern bleeds left.
 - **Monogram:** outside merchandise it must not appear on its own — use it only in visual proximity to the primary, horizontal, or a school/center/institute logo (e.g., the Engineering lockup elsewhere in the deck). Clear space: ¼ of the monogram's width. Minimum width: 20px digital.
 - **Primary logo** (when supplied): place in a corner or left/right-aligned, not centered. Clear space: ¼ of its width. Minimum width: 54px digital.
 - **Horizontal logo** (when supplied): only where the primary logo doesn't fit; centered. Minimum width: 150px digital.

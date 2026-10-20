@@ -1,7 +1,7 @@
 /*
   gw-theme.css — GW brand foundation for 1280×720 HTML slides.
-  Copy this whole file into the deck's <style> block, then add layout CSS
-  from references/layouts.md. Brand definitions: references/brand.md.
+  Paste this whole file into the marked spot in src/deck-template.html, then add
+  layout CSS from references/layouts.md. Brand definitions: references/brand.md.
 
   Load the free substitutes in <head> (see references/brand.md §3):
   Barlow Condensed, Oswald (optional), Nunito Sans, Source Serif 4.
@@ -35,11 +35,31 @@
   --text-caption: #666666;
 
   /* Type stacks: brand family names first, free substitutes second */
-  --font-display:        'Gazzetta', 'Barlow Condensed', Georgia, serif;
-  --font-display-italic: 'Gazzetta Slanted', 'Barlow Condensed', Georgia, serif;
+  --font-display:        'Gazzetta', 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-display-italic: 'Gazzetta Slanted', 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --font-display-heavy:  'Gazzetta', 'Oswald', 'Barlow Condensed', sans-serif;  /* all-caps numerals/stamps only */
   --font-body:           'Avenir Next', 'Nunito Sans', 'Helvetica Neue', Arial, sans-serif;
   --font-accent:         'Source Serif Pro', 'Source Serif', 'Source Serif 4', Georgia, serif;
+
+  /* Display weights — tuned for Gazzetta, whose Regular (400) already reads bold.
+     Always set display weights through these tokens, never as raw numbers. */
+  --display-light:  300;   /* large, airy display lines */
+  --display-weight: 400;   /* titles, dividers, big ideas */
+  --display-strong: 500;   /* big numbers, the heaviest emphasis */
+}
+
+/* Without Gazzetta (not installed, or Safari's font restrictions), the deck runtime adds this
+   class. Barlow Condensed needs heavier weights to match Gazzetta's color, and sets ~1.6× wider —
+   size headlines so they fit in this mode. ?fonts=substitutes forces it for testing. */
+html.gw-substitute-fonts {
+  --font-display:        'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-display-italic: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-display-heavy:  'Oswald', 'Barlow Condensed', sans-serif;
+  --font-body:           'Nunito Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-accent:         'Source Serif 4', Georgia, serif;
+  --display-light:  400;
+  --display-weight: 600;
+  --display-strong: 700;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -62,7 +82,7 @@ body {
 }
 
 /* Typography helpers */
-.t-headline { font-family: var(--font-display); color: var(--gw-blue); line-height: 1.1; }
+.t-headline { font-family: var(--font-display); font-weight: var(--display-weight); color: var(--gw-blue); line-height: 1.1; text-wrap: balance; }
 .t-body     { font-family: var(--font-body);    color: var(--text-body); line-height: 1.55; }
 .t-accent   { font-family: var(--font-accent);  font-style: italic; color: var(--gw-blue); }
 .t-caption  { font-family: var(--font-body);    color: var(--text-caption); font-size: 15px; }
@@ -72,23 +92,52 @@ body {
 .t-reversed-secondary { color: var(--gw-buff); }
 
 /*
-  Chevron ribbon — uses the official SVG from assets/chevrons/ribbon/.
-  Inline the SVG file as a data URI so the deck stays self-contained:
-    .chevron-ribbon { background-image: url("data:image/svg+xml;utf8,<svg …>"); }
-  Chevrons always point right; never rotate or mirror the image.
+  Brand SVGs are inlined as base64 data URIs so the deck stays self-contained:
+    python3 src/inline_asset.py assets/chevrons/ribbon/gw-blue.svg
+  prints a url(...) value for background-image. Add --fill <color> to recolor.
 */
+
+/* Chevron ribbon (assets/chevrons/ribbon/, 159×12 tile). Always points right; never rotate or mirror. */
 .chevron-ribbon {
   height: 12px;
   width: 100%;
   flex-shrink: 0;
   background-repeat: repeat-x;
   background-size: auto 100%;
+  /* background-image: url("data:image/svg+xml;base64,…"); */
+}
+
+/* Chevron chip (assets/chevrons/chip/). Portrait 3:4 — never force it square. */
+.chevron-chip {
+  width: 42px;
+  height: 56px;
+  flex-shrink: 0;
+  background-repeat: no-repeat;
+  background-size: contain;
+  /* background-image: url("data:image/svg+xml;base64,…"); */
 }
 
 /*
-  Chevron chip — square anchor from assets/chevrons/chip/, inlined as <svg> or <img>.
+  Six-pointed star pattern (assets/battle-flag/, 207.36×138.24 tile — exactly 12×8 star periods, so it repeats seamlessly). Background texture only,
+  bleeding off one edge. At native size the stars are specks at 1280px — scale the tile 2.5×.
+  Tone-on-tone: recolor the file one step away from the slide background, e.g.
+    Navy Yard slide → gw-blue fill;  GW Blue slide → navy-yard fill;  white slide → gw-buff-20 fill.
+  The mask fades the pattern out toward the text side; flip the gradient for a left-edge bleed.
 */
-.chevron-chip { width: 56px; height: 56px; flex-shrink: 0; }
+.star-pattern {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 55%;
+  background-repeat: repeat;
+  background-size: 540px 360px;
+  -webkit-mask-image: linear-gradient(to left, #000 30%, transparent 100%);
+          mask-image: linear-gradient(to left, #000 30%, transparent 100%);
+  pointer-events: none;
+  /* background-image: url("data:image/svg+xml;base64,…"); */
+}
+
+/* School logo lockup (assets/logos/), 1500×445 source. First and last slides only; position per slide. */
+.gw-logo { position: absolute; width: 220px; height: auto; }
 
 /*
   Gate crossbar — CSS fallback until an official SVG is available.
