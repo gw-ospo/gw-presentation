@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="cheveron_bars" data-name="cheveron bars" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 96">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #d6bf91;
+      }
+    </style>
+  </defs>
+  <polygon class="cls-1" points="16.57 48 0 27.54 0 39.39 6.97 48 16.57 48"/>
+  <polygon class="cls-1" points="35.77 48 0 3.83 0 15.68 26.17 48 35.77 48"/>
+  <polygon class="cls-1" points="54.97 48 16.1 0 6.5 0 45.37 48 54.97 48"/>
+  <polygon class="cls-1" points="72 48 72 45.32 35.3 0 25.7 0 64.57 48 72 48"/>
+  <polygon class="cls-1" points="72 21.61 54.5 0 44.9 0 72 33.46 72 21.61"/>
+  <polygon class="cls-1" points="72 0 64.1 0 72 9.75 72 0"/>
+  <polygon class="cls-1" points="0 48 0 56.61 6.97 48 0 48"/>
+  <polygon class="cls-1" points="16.57 48 0 68.46 0 80.32 26.17 48 16.57 48"/>
+  <polygon class="cls-1" points="35.77 48 0 92.17 0 96 6.5 96 45.37 48 35.77 48"/>
+  <polygon class="cls-1" points="54.97 48 16.1 96 25.7 96 64.57 48 54.97 48"/>
+  <polygon class="cls-1" points="44.9 96 72 62.54 72 50.68 35.3 96 44.9 96"/>
+  <polygon class="cls-1" points="64.1 96 72 86.25 72 74.39 54.5 96 64.1 96"/>
+</svg>

@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>From Webpage to Skill — GWU Brand AI Workflow</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* ─── GWU Brand Variables ─────────────────────────── */
+    :root {
+      --gw-blue:    #033C5A;
+      --gw-buff:    #D6BF91;
+      --potomac:    #0075C8;
+      --navy-yard:  #00223E;
+      --white:      #FFFFFF;
+
+      --gw-buff-20: #F6F1E8;
+      --gw-buff-50: #E8DDC6;
+      --gw-buff-80: #DAC8A3;
+      --potomac-20: #CCE3F4;
+      --potomac-50: #7FBAE3;
+      --potomac-80: #3391D3;
+
+      --font-headline: 'Gazzetta', 'Playfair Display', Georgia, serif;
+      --font-body:     'Proxima Nova', 'Nunito Sans', 'Helvetica Neue', Arial, sans-serif;
+      --font-accent:   'Source Serif Pro', 'Source Serif 4', Georgia, serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      margin: 0; padding: 0;
+      width: 100vw; height: 100vh;
+      overflow: hidden;
+      background: #111;
+    }
+    body { font-family: var(--font-body); }
+
+    /* ─── Stage: fixed 1280×720 canvas, scaled to viewport ── */
+    #stage {
+      position: fixed;
+      width: 1280px;
+      height: 720px;
+      transform-origin: 0 0;   /* JS sets translate + scale */
+    }
+
+    /* ─── Slide Shell ─────────────────────────────────── */
+    /*
+     * All slides are always display:flex so individual slide classes
+     * (.s2 {display:flex}, .s3 {display:grid}, etc.) don't fight us.
+     * We hide/show with visibility instead — no specificity conflict.
+     */
+    .slide {
+      width: 1280px;
+      height: 720px;
+      position: absolute;
+      top: 0; left: 0;
+      overflow: hidden;
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      visibility: hidden;       /* invisible but rendered */
+      pointer-events: none;
+    }
+    .slide.active {
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    /* ─── Nav controls overlay (outside stage, native px) ── */
+    #controls {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 9999;
+      background: rgba(0,0,0,0.48);
+      backdrop-filter: blur(10px);
+      padding: 7px 20px;
+      border-radius: 32px;
+    }
+    #controls button {
+      background: none; border: none;
+      color: rgba(255,255,255,0.65);
+      font-size: 20px; cursor: pointer;
+      padding: 2px 8px; border-radius: 6px;
+      transition: color 0.15s;
+      line-height: 1;
+    }
+    #controls button:hover { color: #fff; }
+    #slide-counter {
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      min-width: 44px;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── Graphic Elements ────────────────────────────── */
+    .chevron-ribbon {
+      height: 7px;
+      width: 100%;
+      flex-shrink: 0;
+      background: repeating-linear-gradient(
+        112deg,
+        var(--gw-blue) 0px,  var(--gw-blue) 14px,
+        var(--gw-buff) 14px, var(--gw-buff) 28px
+      );
+    }
+
+    .chevron-subtle {           /* tone-on-tone for dark slides */
+      height: 7px;
+      width: 100%;
+      background: repeating-linear-gradient(
+        112deg,
+        rgba(214,191,145,0.38) 0px,  rgba(214,191,145,0.38) 14px,
+        rgba(214,191,145,0.13) 14px, rgba(214,191,145,0.13) 28px
+      );
+    }
+
+    .gate-crossbar {
+      height: 2px;
+      width: 180px;
+      margin: 0 auto;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--gw-buff) 0px, var(--gw-buff) 9px,
+        transparent    9px, transparent  15px
+      );
+    }
+
+    .buff-rule {
+      width: 80px;
+      height: 3px;
+      background: var(--gw-buff);
+    }
+
+    .buff-rule-center {
+      width: 100px;
+      height: 3px;
+      background: var(--gw-buff);
+      margin: 0 auto;
+    }
+
+
+    /* ══════════════════════════════════════════════════
+       SLIDE 1 — Cover  (dark, navy-yard)
+    ══════════════════════════════════════════════════ */
+    .s1 { background: var(--navy-yard); }
+
+    .s1-chevron-bg {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        112deg,
+        rgba(214,191,145,0.055) 0px,  rgba(214,191,145,0.055) 36px,
+        rgba(214,191,145,0.02)  36px, rgba(214,191,145,0.02)  72px
+      );
+      pointer-events: none;
+    }
+
+    .s1-body {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex: 1;
+      padding: 72px 96px;
+      gap: 22px;
+    }
+
+    .s1-eyebrow {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gw-buff);
+    }
+
+    .s1-title {
+      font-family: var(--font-headline);
+      font-size: 76px;
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.08;
+      max-width: 860px;
+    }
+
+    .s1-subtitle {
+      font-family: var(--font-accent);
+      font-style: italic;
+      font-size: 24px;
+      color: var(--gw-buff-80);
+      max-width: 700px;
+      line-height: 1.45;
+      margin-top: 6px;
+    }
+
+    .s1-byline {
+      position: absolute;
+      bottom: 48px;
+      left: 96px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--gw-buff-80);
+    }
+
+
+    /* ══════════════════════════════════════════════════
+       SLIDE 2 — Big Idea
+    ══════════════════════════════════════════════════ */
+    .s2 {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 120px;
+      gap: 0;
+    }
+
+    .s2-text {
+      font-family: var(--font-headline);
+      font-size: 58px;
+      font-weight: 700;
+      color: var(--gw-blue);
+      text-align: center;
+      line-height: 1.2;
+      max-width: 900px;
+      margin: 44px 0;
+    }
+
+
+    /* ══════════════════════════════════════════════════
+       SLIDE 3 — The Challenge  (split)
+    ══════════════════════════════════════════════════ */
+    .s3 {
+      display: grid;
+      grid-template-columns: 480px 1fr;
+      height: 100%;
+    }
+
+    .s3-left {
+      background: var(--gw-blue);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 56px 48px;
+      gap: 24px;
+    }
+
+    /* CSS browser-window mockup */
+    .browser-mock {
+      width: 320px;
+      background: #f0f0f0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .browser-bar {
+      background: #e0e0e0;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .browser-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .browser-url {
+      flex: 1;
+      background: white;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 10px;
+      color: #555;
+      font-family: monospace;
+      margin-left: 6px;
+    }
+    .browser-page {
+      padding: 16px;
+      background: white;
+    }
+    .browser-hero {
+      height: 60px;
+      background: var(--navy-yard);
+      border-radius: 4px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+    }
+    .browser-hero-text {
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-body);
+    }
+    .browser-section {
+      height: 10px;
+      background: #e8e8e8;
+      border-radius: 3px;
+      margin-bottom: 6px;
+    }
+    .browser-section.w60 { width: 60%; }
+    .browser-section.w80 { width: 80%; }
+    .browser-section.w45 { width: 45%; }
+    .browser-swatch-row {
+      display: flex;
+      gap: 5px;
+      margin: 10px 0;
+    }
+    .browser-swatch {
+      width: 28px; height: 28px;
+      border-radius: 3px;
+    }
+
+    .s3-caption {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--gw-buff-80);
+      text-align: center;
+      font-weight: 300;
+    }
+
+    .s3-right {
+      padding: 72px 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .slide-title {
+      font-family: var(--font-headline);
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--gw-blue);
+      line-height: 1.2;
+    }
+
+    .body-para {
+      font-family: var(--font-body);
+      font-size: 22px;
+      color: #1e1e1e;
+      line-height: 1.6;
+    }
+
+
+    /* ══════════════════════════════════════════════════
+       SLIDE 4 — Step 1: Claude on Chrome  (split, reversed)
+    ══════════════════════════════════════════════════ */
+    .s4 {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      height: 100%;
+    }
+
+    .s4-left {
+      padding: 64px 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 28px;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .step-num {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--gw-buff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-headline);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--gw-blue);
+      flex-shrink: 0;
+    }
+    .step-label {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gw-buff-80);
+    }
+
+    .s4-right {
+      background: var(--potomac);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 56px 40px;
+      gap: 28px;
+    }
+
+    .tool-icon-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .tool-icon {
+      width: 72px; height: 72px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      color: var(--white);
+    }
+    .tool-name {
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+      text-align: center;
+    }
+    .arrow-down {
+      font-size: 24px;
+      color: rgba(255,255,255,0.4);
+    }
+    .output-pill {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+    .output-pill i {
+      color: var(--gw-buff);
+      font-size: 18px;
+    }
+    .output-pill-text {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--white);
+      font-weight: 400;
+    }
+
+
+    /* ══════════════════════════════════════════════════
+       SLIDE 5 — What Was Captured  (3 tiles)
+    ══════════════════════════════════════════════════ */
+    .s5 {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .s5-header {
+      padding: 48px 80px 0;
+    }
+
+    .s5-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      padding: 32px 80px 52px;
+      flex: 1;
+      align-content: center;
+    }
+
+    .tile {
+      padding: 32px 28px;
+      background: var(--gw-buff-20);
+      border-top: 5px solid var(--gw-buff);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .tile-icon {
+      font-size: 28px;
+      color: var(--gw-blue);
+      margin-bottom: 4px;
+    }
+
+    .tile-label {
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--potomac);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .tile-body {
+      font-family: var(--font-body);
+      font-size: 19px;
+      color: #1e1e1e;
+      line-height: 1.55;
+    }
+
+    .tile-detail {
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: #666;
+      line-height: 1.5;
+      border-top: 1px solid var(--gw-buff-50);
+      padding-top: 10px;
+      margin-top: 4px;
+    }
+
+
+    /* ══════════════════════════════════════════════════
+       SLIDE 6 — Section Divider
+    ══════════════════════════════════════════════════ */
+    .s6 {
+      background: var(--gw-blue);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      height: 100%;
+    }
+
+    .divider-label {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gw-buff);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .divider-rule {
+      width: 120px;
+      height: 2px;
+      background: var(--gw-buff);
+    }
+
+    .divider-title {
+      font-family: var(--font-headline);
+      font-size: 52px;
+      font-weight: 400;
+      font-style: italic;
+      color: var(--white);
+      text-align: center;
+      max-width: 760px;
+      line-height: 1.25;
+    }
+
+
+    /* ══════════════════════════════════════════════════
+       SLIDE 7 — Step 2: Synthesis  (split)
+    ══════════════════════════════════════════════════ */
+    .s7 {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      height: 100%;
+    }
+
+    .s7-left {
+      background: var(--navy-yard);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 56px 44px;
+      gap: 0;
+    }
+
+    .input-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .input-card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(214,191,145,0.25);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .input-card i {
+      color: var(--gw-buff);
+      font-size: 18px;
+      width: 22px;
+      text-align: center;
+    }
+    .input-card-text {
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--white);
+      line-height: 1.35;
+    }
+    .input-card-text strong {
+      color: var(--gw-buff-80);
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 2px;
+    }
+
+    .stack-arrow {
+      text-align: center;
+      font-size: 20px;
+      color: var(--gw-buff);
+      padding: 8px 0;
+    }
+
+    .output-card {
+      margin-top: 16px;
+      background: var(--gw-buff);
+      border-radius: 8px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .output-card i {
+      color: var(--gw-blue);
+      font-size: 22px;
+    }
+    .output-card-text {
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gw-blue);
+    }
+    .output-card-text small {
+      display: block;
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(3,60,90,0.7);
+    }
+
+    .s7-right {
+      padding: 64px 72px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 26px;
+    }
+
+    .feature-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--gw-buff-50);
+    }
+    .feature-row:last-child {
+      border-bottom: none;
+    }
+    .feature-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--gw-buff-20);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 17px;
+      color: var(--gw-blue);
+      margin-top: 2px;
+    }
+    .feature-text h4 {
+      font-family: var(--font-body);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gw-blue);
+      margin-bottom: 4px;
+    }
+    .feature-text p {
+      font-family: var(--font-body);
+      font-size: 17px;
+      color: #333;
+      line-height: 1.5;
+    }
+
+
+    /* ══════════════════════════════════════════════════
+       SLIDE 8 — Closing  (dark)
+    ══════════════════════════════════════════════════ */
+    .s8 {
+      background: var(--navy-yard);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .s8-chevron-bg {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        112deg,
+        rgba(214,191,145,0.045) 0px,  rgba(214,191,145,0.045) 36px,
+        rgba(214,191,145,0.015) 36px, rgba(214,191,145,0.015) 72px
+      );
+      pointer-events: none;
+    }
+
+    .s8-body {
+      position: relative;
+      display: flex;
+      height: 100%;
+    }
+
+    .s8-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 80px 80px 80px 96px;
+      gap: 28px;
+    }
+
+    .s8-title {
+      font-family: var(--font-headline);
+      font-size: 60px;
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.12;
+      max-width: 560px;
+    }
+
+    .s8-body-text {
+      font-family: var(--font-accent);
+      font-style: italic;
+      font-size: 22px;
+      color: var(--gw-buff-80);
+      line-height: 1.5;
+      max-width: 520px;
+    }
+
+    .s8-tagline {
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--gw-buff);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+
+    .s8-right {
+      width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 56px 40px;
+      gap: 24px;
+      border-left: 1px solid rgba(214,191,145,0.15);
+    }
+
+    /* Skill file icon */
+    .skill-icon {
+      width: 120px; height: 120px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(214,191,145,0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .skill-icon i {
+      font-size: 44px;
+      color: var(--gw-buff);
+    }
+    .skill-icon-label {
+      font-family: var(--font-body);
+      font-size: 11px;
+      color: var(--gw-buff-80);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .workflow-summary {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+    .ws-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ws-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--gw-buff);
+      flex-shrink: 0;
+    }
+    .ws-text {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: rgba(255,255,255,0.75);
+    }
+    .ws-text strong {
+      color: var(--gw-buff-80);
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- Nav overlay — lives outside the stage so it stays in real viewport px -->
+<div id="controls">
+  <button onclick="goTo(current-1)" title="Previous (← arrow key)">&#8592;</button>
+  <span id="slide-counter">1 / 8</span>
+  <button onclick="goTo(current+1)" title="Next (→ arrow key)">&#8594;</button>
+  <button onclick="document.documentElement.requestFullscreen?.()" title="Full screen (F key)" style="font-size:15px; letter-spacing:-1px;">⛶</button>
+</div>
+
+<!-- Stage: scaled 1280×720 canvas -->
+<div id="stage">
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 1 — Cover
+  ══════════════════════════════════════════════════ -->
+  <div class="slide s1">
+    <div class="s1-chevron-bg"></div>
+    <div class="s1-body">
+      <span class="s1-eyebrow">George Washington University · A Workflow Story</span>
+      <h1 class="s1-title">From Webpage<br>to Skill</h1>
+      <p class="s1-subtitle">
+        How Claude read the brand guidelines and learned to design
+        presentations in the GWU style — without being asked twice.
+      </p>
+    </div>
+    <div class="s1-byline">Lorena A. Barba · April 2026</div>
+    <div class="chevron-subtle"></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 2 — Big Idea
+  ══════════════════════════════════════════════════ -->
+  <div class="slide s2">
+    <div class="buff-rule-center"></div>
+    <p class="s2-text">
+      The work isn't the slides.<br>
+      It's teaching Claude to make them.
+    </p>
+    <div class="buff-rule-center"></div>
+    <div class="chevron-ribbon" style="position:absolute; bottom:0; left:0; right:0; height:7px;"></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 3 — The Challenge
+  ══════════════════════════════════════════════════ -->
+  <div class="slide s3">
+    <div class="s3-left">
+      <!-- CSS browser-window mockup representing the GWU brand guidelines site -->
+      <div class="browser-mock">
+        <div class="browser-bar">
+          <div class="browser-dot" style="background:#ff5f57;"></div>
+          <div class="browser-dot" style="background:#ffbc2e;"></div>
+          <div class="browser-dot" style="background:#28c840;"></div>
+          <div class="browser-url">communications.gwu.edu/brand-guidelines</div>
+        </div>
+        <div class="browser-page">
+          <div class="browser-hero">
+            <span class="browser-hero-text">GW Brand Guidelines</span>
+          </div>
+          <div class="browser-section w80"></div>
+          <div class="browser-section w60"></div>
+          <div class="browser-swatch-row">
+            <div class="browser-swatch" style="background:#033C5A;"></div>
+            <div class="browser-swatch" style="background:#D6BF91;"></div>
+            <div class="browser-swatch" style="background:#0075C8;"></div>
+            <div class="browser-swatch" style="background:#00223E;"></div>
+            <div class="browser-swatch" style="background:#EF4343;"></div>
+          </div>
+          <div class="browser-section w80"></div>
+          <div class="browser-section w45"></div>
+          <div class="browser-section w80"></div>
+          <div class="browser-section w60"></div>
+        </div>
+      </div>
+      <p class="s3-caption">communications.gwu.edu/brand-guidelines</p>
+    </div>
+
+    <div class="s3-right">
+      <div>
+        <div class="slide-title">GWU refreshed its brand.</div>
+        <div class="buff-rule" style="margin-top: 14px;"></div>
+      </div>
+      <p class="body-para">
+        New colors. New typefaces. New graphic elements drawn
+        from campus architecture and the DC flag.
+      </p>
+      <p class="body-para">
+        The guidelines live on three web pages — detailed, thoughtful,
+        and written for designers, not for an AI.
+      </p>
+      <p class="body-para" style="color: var(--potomac); font-weight: 600;">
+        The question was how to get that knowledge into Claude's hands,
+        permanently and precisely.
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 4 — Step 1: Claude on Chrome
+  ══════════════════════════════════════════════════ -->
+  <div class="slide s4">
+
+    <div class="s4-left">
+      <div class="step-badge">
+        <div class="step-num">1</div>
+        <span class="step-label">Extract</span>
+      </div>
+      <div>
+        <div class="slide-title" style="font-size: 44px;">Claude on Chrome<br>read the guidelines.</div>
+        <div class="buff-rule" style="margin-top: 14px;"></div>
+      </div>
+      <p class="body-para">
+        Using Claude's browser extension, three pages of brand documentation
+        were visited and distilled — keeping only what a slide designer needs:
+        colors, type, and graphic elements.
+      </p>
+      <p class="body-para" style="color: var(--potomac);">
+        No copy-pasting. No manual transcription. Claude read the pages
+        and produced structured Markdown files, ready to use.
+      </p>
+    </div>
+
+    <div class="s4-right">
+      <div class="tool-icon-block">
+        <div class="tool-icon"><i class="fa-brands fa-chrome"></i></div>
+        <span class="tool-name">Claude on Chrome</span>
+      </div>
+      <div class="arrow-down"><i class="fa-solid fa-arrow-down"></i></div>
+      <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
+        <div class="output-pill">
+          <i class="fa-solid fa-file-lines"></i>
+          <span class="output-pill-text">gwu-brand-specs.md<br><span style="opacity:0.6; font-size:12px;">Colors · Typography · Accessibility</span></span>
+        </div>
+        <div class="output-pill">
+          <i class="fa-solid fa-file-lines"></i>
+          <span class="output-pill-text">gwu-graphic-elements-guidelines.md<br><span style="opacity:0.6; font-size:12px;">Chevrons · Gate Crossbar · Stars</span></span>
+        </div>
+      </div>
+      <div class="arrow-down" style="font-size:16px; color:rgba(255,255,255,0.25);">
+        <i class="fa-solid fa-arrow-down"></i>
+      </div>
+      <p style="font-family: var(--font-body); font-size:13px; color:rgba(255,255,255,0.55); text-align:center; line-height:1.5;">
+        Minimal. Structured.<br>Only what matters.
+      </p>
+    </div>
+
+    <div class="chevron-ribbon" style="position:absolute; bottom:0; left:0; right:0;"></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 5 — What Was Captured
+  ══════════════════════════════════════════════════ -->
+  <div class="slide s5">
+    <div class="s5-header">
+      <div class="slide-title" style="font-size: 42px;">Three aspects of the brand — captured precisely.</div>
+      <div class="buff-rule" style="margin-top: 12px;"></div>
+    </div>
+
+    <div class="s5-grid">
+      <div class="tile">
+        <div class="tile-icon"><i class="fa-solid fa-palette"></i></div>
+        <div class="tile-label">Color System</div>
+        <div class="tile-body">
+          10 named brand colors with tints. Exact hex values.
+          WCAG AA–compliant pairings for every background.
+        </div>
+        <div class="tile-detail">
+          GW Blue · GW Buff · Potomac · Navy Yard —
+          plus five secondary accents with usage rules.
+        </div>
+      </div>
+
+      <div class="tile">
+        <div class="tile-icon"><i class="fa-solid fa-font"></i></div>
+        <div class="tile-label">Typography</div>
+        <div class="tile-body">
+          Three brand typefaces with roles defined.
+          Google Fonts substitutes identified for free use online.
+        </div>
+        <div class="tile-detail">
+          Gazzetta → Playfair Display &nbsp;·&nbsp;
+          Avenir Next → Nunito Sans &nbsp;·&nbsp;
+          Source Serif → Source Serif 4
+        </div>
+      </div>
+
+      <div class="tile">
+        <div class="tile-icon"><i class="fa-solid fa-shapes"></i></div>
+        <div class="tile-label">Graphic Elements</div>
+        <div class="tile-body">
+          Chevrons, Gate Crossbar, and star motifs — each with
+          specific rules for orientation, color, and placement.
+        </div>
+        <div class="tile-detail">
+          One pattern per slide. Single color only.
+          Consistent throughout the deck.
+        </div>
+      </div>
+    </div>
+
+    <div class="chevron-ribbon"></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 6 — Section Divider
+  ══════════════════════════════════════════════════ -->
+  <div class="slide s6">
+    <div class="divider-label">Step Two</div>
+    <div class="divider-rule"></div>
+    <div class="gate-crossbar"></div>
+    <div class="divider-title">Turning knowledge<br>into a reusable skill</div>
+    <div class="divider-rule"></div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 7 — Step 2: Synthesis
+  ══════════════════════════════════════════════════ -->
+  <div class="slide s7">
+
+    <div class="s7-left">
+      <div class="input-stack">
+        <div class="input-card">
+          <i class="fa-solid fa-file-code"></i>
+          <div class="input-card-text">
+            <strong>Previous spec</strong>
+            OLD-gwu-light-theme.md
+          </div>
+        </div>
+        <div class="input-card">
+          <i class="fa-solid fa-file-lines"></i>
+          <div class="input-card-text">
+            <strong>Extracted from web</strong>
+            gwu-brand-specs.md
+          </div>
+        </div>
+        <div class="input-card">
+          <i class="fa-solid fa-file-lines"></i>
+          <div class="input-card-text">
+            <strong>Extracted from web</strong>
+            gwu-graphic-elements-guidelines.md
+          </div>
+        </div>
+      </div>
+      <div class="stack-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+      <div class="output-card">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <div class="output-card-text">
+          gwu-presentation.skill
+          <small>Installable · Reusable · Always brand-correct</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="s7-right">
+      <div>
+        <div class="step-badge">
+          <div class="step-num">2</div>
+          <span class="step-label">Synthesize</span>
+        </div>
+        <div class="slide-title" style="font-size: 42px; margin-top: 10px;">The skill-creator combined<br>all three inputs.</div>
+        <div class="buff-rule" style="margin-top: 14px;"></div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-icon"><i class="fa-solid fa-swatchbook"></i></div>
+        <div class="feature-text">
+          <h4>Updated brand identity</h4>
+          <p>New colors, typefaces, and graphic elements — replacing the outdated 2022 spec.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon"><i class="fa-solid fa-spa"></i></div>
+        <div class="feature-text">
+          <h4>Presentation Zen built in</h4>
+          <p>One idea per slide, signal over noise, images over bullets — principles woven into every layout rule.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon"><i class="fa-solid fa-layer-group"></i></div>
+        <div class="feature-text">
+          <h4>Nine layout patterns</h4>
+          <p>Cover, big idea, split, stats, tiles, divider, quote, image — each chosen by communication purpose, not habit.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       SLIDE 8 — Closing
+  ══════════════════════════════════════════════════ -->
+  <div class="slide s8">
+    <div class="s8-chevron-bg"></div>
+    <div class="s8-body">
+
+      <div class="s8-left">
+        <div class="s8-tagline">The Result</div>
+        <div class="buff-rule"></div>
+        <h2 class="s8-title">
+          One installation.<br>
+          Brand-compliant<br>
+          by default.
+        </h2>
+        <p class="s8-body-text">
+          Every future GWU presentation starts with the right colors,
+          the right typefaces, and the right design principles —
+          without looking anything up.
+        </p>
+      </div>
+
+      <div class="s8-right">
+        <div class="skill-icon">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span class="skill-icon-label">.skill</span>
+        </div>
+
+        <div class="workflow-summary">
+          <div class="ws-step">
+            <div class="ws-dot"></div>
+            <span class="ws-text"><strong>Claude on Chrome</strong> reads brand guidelines</span>
+          </div>
+          <div class="ws-step">
+            <div class="ws-dot"></div>
+            <span class="ws-text">Extracts structured <strong>Markdown files</strong></span>
+          </div>
+          <div class="ws-step">
+            <div class="ws-dot"></div>
+            <span class="ws-text"><strong>Skill creator</strong> synthesizes with Presentation Zen</span>
+          </div>
+          <div class="ws-step">
+            <div class="ws-dot"></div>
+            <span class="ws-text">Packaged as an installable <strong>.skill file</strong></span>
+          </div>
+          <div class="ws-step">
+            <div class="ws-dot" style="background: var(--potomac-50);"></div>
+            <span class="ws-text" style="color: var(--potomac-50);">Total time: <strong style="color: var(--potomac-50);">one afternoon</strong></span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="chevron-subtle"></div>
+  </div>
+
+
+</div><!-- /stage -->
+
+  <script>
+    const slides  = Array.from(document.querySelectorAll('.slide'));
+    const stage   = document.getElementById('stage');
+    const counter = document.getElementById('slide-counter');
+    var current   = 0;   /* var so onclick attributes in HTML can read it */
+
+    /* Scale the 1280×720 stage to fill the current viewport */
+    function scaleStage() {
+      const scaleX = window.innerWidth  / 1280;
+      const scaleY = window.innerHeight / 720;
+      const scale  = Math.min(scaleX, scaleY);
+      const ox = (window.innerWidth  - 1280 * scale) / 2;
+      const oy = (window.innerHeight - 720  * scale) / 2;
+      stage.style.transform = `translate(${ox}px, ${oy}px) scale(${scale})`;
+    }
+
+    /* Show slide n, update counter */
+    function goTo(n) {
+      slides[current].classList.remove('active');
+      current = Math.max(0, Math.min(n, slides.length - 1));
+      slides[current].classList.add('active');
+      counter.textContent = `${current + 1} / ${slides.length}`;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if      (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
+      else if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(current - 1);
+      else if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen?.();
+    });
+
+    window.addEventListener('resize', scaleStage);
+    scaleStage();   /* initial sizing */
+    goTo(0);        /* show first slide */
+  </script>
+
+</body>
+</html>
