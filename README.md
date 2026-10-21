@@ -87,8 +87,9 @@ The skill is the folder `skills/gw-presentation/`:
 
 | Path | Contents |
 |---|---|
-| `skills/gw-presentation/` | The skill: `SKILL.md`, `references/` (brand, layouts, PowerPoint), `src/` (deck template, CSS theme, PowerPoint helper, build and render scripts), `assets/` (official brand SVG/PNG files) |
+| `skills/gw-presentation/` | The skill: `SKILL.md`, `LICENSE.md`, `references/` (brand, layouts, PowerPoint), `src/` (deck template, CSS theme, PowerPoint helper, build and render scripts), `assets/` (official brand SVG/PNG files) |
 | `examples/` | Sample decks: `what-is-a-skill/` (HTML) and `reproducible-research/` (HTML, plus PowerPoint with its build script), made with the current skill; `skill-workflow/` and `early-test/` (April 2026 versions, with the original PowerPoint scripts) |
+| `LICENSE.md`, `LICENSES/`, `REUSE.toml` | Licensing: summary, full license texts, and the per-file record |
 | `docs/HISTORY.md` | Project log of how the skill was built |
 | `docs/source/` | Brand guideline notes used as source material |
 | `source-assets/` | Print-format brand files (EPS) still to be converted to SVG; not shipped with the skill |
@@ -129,3 +130,13 @@ Two sets of SVGs were also **cropped to seamless tiles**, because repeating the 
 The star grid and the chevrons themselves are unchanged.
 
 Logo PNGs are unchanged.
+
+## License
+
+- **Code:** BSD 3-Clause.
+- **Text and design:** CC BY 4.0.
+- **GW logos and graphic elements:** © The George Washington University and **not licensed** by this project; their use is governed by the [GW brand guidelines](https://communications.gwu.edu/brand-guidelines/).
+
+See [LICENSE.md](LICENSE.md) for which files are which, how to give attribution, and what isn't included. Every file's license is recorded in [REUSE.toml](REUSE.toml) ([REUSE](https://reuse.software) format).
+
+"The George Washington University," "George Washington University," "GW," and the GW logos are trademarks of The George Washington University.

@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Lorena A. Barba
+// SPDX-License-Identifier: BSD-3-Clause
 /**
  * Builds reproducible-research.pptx with the skill's PowerPoint helper.
  *

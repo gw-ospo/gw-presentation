@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Lorena A. Barba
+# SPDX-License-Identifier: BSD-3-Clause
 """Render every slide of a deck built from src/deck-template.html to PNG with headless Chrome.
 
 Usage:

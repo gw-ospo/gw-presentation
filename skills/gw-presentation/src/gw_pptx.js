@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Lorena A. Barba
+// SPDX-License-Identifier: BSD-3-Clause
 /**
  * gw_pptx.js — build GW-branded PowerPoint decks with PptxGenJS.
  *

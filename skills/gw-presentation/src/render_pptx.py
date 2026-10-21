@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Lorena A. Barba
+# SPDX-License-Identifier: BSD-3-Clause
 """Render every slide of a .pptx to PNG, plus a contact sheet, to check it before delivering.
 
 Usage:

@@ -2,6 +2,7 @@
 name: gw-presentation
 description: >
   Creates George Washington University (GW) branded slide presentations — self-contained HTML decks by default, PowerPoint (.pptx) on request — applying the GW brand palette, typography, official graphic elements, and Presentation Zen principles. Use when the user asks for slides, a deck, or a presentation for a GW context (research talk, course lecture, conference, seminar, department meeting), mentions GW or GWU branding, or wants existing slides redesigned in the GW style.
+license: BSD-3-Clause (code) and CC-BY-4.0 (text); GW logos and graphic elements are not licensed. See LICENSE.md.
 metadata:
   author: Lorena A. Barba
   version: "2.0-dev"

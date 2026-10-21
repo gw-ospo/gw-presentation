@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Lorena A. Barba
+# SPDX-License-Identifier: BSD-3-Clause
 """Turn a brand file from assets/ (SVG or PNG) into something you can paste into a self-contained deck.
 
 Usage:

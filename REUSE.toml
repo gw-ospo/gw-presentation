@@ -1,0 +1,33 @@
+# Copyright and license of every file in this repository, in REUSE format (https://reuse.software).
+# Check with: reuse lint
+# When several annotations match a file, the last one in this list applies.
+version = 1
+
+# Prose: README, the skill's instructions and references, project docs
+[[annotations]]
+path = ["**/*.md"]
+SPDX-FileCopyrightText = "2026 Lorena A. Barba"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+# Code: the skill's scripts, deck template, CSS theme, and build helpers
+[[annotations]]
+path = ["skills/gw-presentation/src/**", "examples/**/*.js", "examples/**/*.py", ".gitignore", "REUSE.toml"]
+SPDX-FileCopyrightText = "2026 Lorena A. Barba"
+SPDX-License-Identifier = "BSD-3-Clause"
+
+# Example decks: text and design (CC BY), embedded deck code (BSD, HTML only), embedded GW logos and graphics (not licensed)
+[[annotations]]
+path = ["examples/**/*.html"]
+SPDX-FileCopyrightText = ["2026 Lorena A. Barba", "The George Washington University (embedded logos and graphic elements)"]
+SPDX-License-Identifier = "CC-BY-4.0 AND BSD-3-Clause AND LicenseRef-GW-Brand-Assets"
+
+[[annotations]]
+path = ["examples/**/*.pptx", "examples/**/*.pdf"]
+SPDX-FileCopyrightText = ["2026 Lorena A. Barba", "The George Washington University (embedded logos and graphic elements)"]
+SPDX-License-Identifier = "CC-BY-4.0 AND LicenseRef-GW-Brand-Assets"
+
+# GW brand assets: logos and graphic elements, owned by the university and not licensed by this project
+[[annotations]]
+path = ["skills/gw-presentation/assets/**", "source-assets/**"]
+SPDX-FileCopyrightText = "The George Washington University"
+SPDX-License-Identifier = "LicenseRef-GW-Brand-Assets"

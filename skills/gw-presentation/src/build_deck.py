@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Lorena A. Barba
+# SPDX-License-Identifier: BSD-3-Clause
 """Assemble a self-contained HTML deck from the template, the theme, and this deck's own parts.
 
 Usage:

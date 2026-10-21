@@ -1,0 +1,21 @@
+GW brand assets — not licensed by this project
+
+The files marked with this identifier are official brand assets of The George
+Washington University: logos and logo lockups, and graphic elements from the
+GW brand asset packs (chevrons, six-pointed star / battle-flag pattern, gate
+crossbar, five-pointed stars), including versions of them recolored or cropped
+as described in this project's README.
+
+Copyright © The George Washington University. All rights reserved.
+
+The names "The George Washington University," "George Washington University,"
+and "GW," and the GW logos, are trademarks of The George Washington University.
+
+These files are included only so that this skill can produce presentations
+that follow the GW brand guidelines. This project grants no license to them:
+neither the BSD 3-Clause License nor the Creative Commons Attribution 4.0
+License that cover the rest of this project apply to these files. Their use is
+governed by the GW brand guidelines
+(https://communications.gwu.edu/brand-guidelines/) and by the university's
+Office of Communications and Marketing, which answers questions about the
+visual identity at visualidentity@gwu.edu.
