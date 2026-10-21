@@ -67,13 +67,47 @@ GW faculty and staff can activate **Gazzetta**, **Avenir Next** and **Source Ser
 
 ## Requirements
 
-The agent running the skill needs:
+Building a deck and checking it need different tools. The skill **builds** decks with very little. It **checks** them by rendering every slide to an image and looking at it, which needs a renderer.
 
-| For | Needs |
-|---|---|
-| Building and checking HTML decks | Python 3 and Google Chrome or Chromium |
-| Building PowerPoint decks | Node.js 18+ with `npm install pptxgenjs` in a working folder, and Chrome or Chromium |
-| Checking PowerPoint decks | LibreOffice, or Microsoft PowerPoint on macOS |
+| Task | Needs | If it's missing |
+|---|---|---|
+| Build an HTML deck | Python 3 | — |
+| Build a PowerPoint deck | Node.js 18+ and pptxgenjs (`npm install pptxgenjs`, or a global install) | The PowerPoint path is unavailable; the agent can offer an HTML deck instead |
+| Check an HTML deck | Google Chrome or Chromium (including a Playwright download) | The agent delivers the deck and says it wasn't visually checked |
+| Check a PowerPoint deck | LibreOffice, or Microsoft PowerPoint on macOS; plus poppler (`pdftoppm`), the `pypdfium2` Python package, or macOS | The agent delivers the deck and says it wasn't visually checked |
+
+No browser is needed to build PowerPoint decks: the images PowerPoint can't make from the brand SVGs come pre-rendered in `assets/pptx/`.
+
+### Where it runs
+
+Status of each environment. Only the developer setup has been tested end to end; the cloud columns are based on Anthropic's published documentation.
+
+| | Developer machine (macOS, Python, Node, Chrome) | Claude Code on the web | Claude apps (claude.ai, desktop) | Claude API |
+|---|---|---|---|---|
+| HTML: build | ✅ | ✅ | ✅ | ✅ |
+| HTML: check | ✅ | ⚠️ Needs a browser installed in the environment's setup script | ⚠️ No browser documented | ❌ No browser |
+| PowerPoint: build | ✅ | ✅ `npm install` works on the default network setting | ⚠️ pptxgenjs reported preinstalled; not verified | ❌ No Node, no network |
+| PowerPoint: check | ✅ PowerPoint or LibreOffice | ⚠️ LibreOffice and poppler install with `apt` in the setup script | ⚠️ LibreOffice reported available; not verified | ❌ |
+
+### Fonts in the cloud
+
+Cloud machines don't have the Adobe brand fonts. **That doesn't affect the files you get:**
+- An HTML deck picks the brand fonts on *your* machine when you open it.
+- A PowerPoint file names the brand fonts, and shows them on any computer that has them installed.
+
+Only the agent's own previews use the free substitute fonts. The skill bundles those fonts (in `fonts/`) and installs them before rendering, so previews look right even without access to Google Fonts.
+
+The free fonts set wider than the brand fonts for headlines, accents and labels, so if text fits in the preview, it fits for you. Body text is the exception: Nunito Sans sets about 3% narrower than Avenir Next, so the skill leaves body text a little room.
+
+For PowerPoint, the agent builds two copies of the deck: one with the brand fonts for you, and one with the free fonts that it renders and checks.
+
+### For maintainers
+
+If you change the brand SVGs, regenerate the pre-rendered PowerPoint images. This needs Chrome:
+
+```bash
+node skills/gw-presentation/src/gw_pptx.js --make-images
+```
 
 ## Installing the skill
 
@@ -87,7 +121,7 @@ The skill is the folder `skills/gw-presentation/`:
 
 | Path | Contents |
 |---|---|
-| `skills/gw-presentation/` | The skill: `SKILL.md`, `LICENSE.md`, `references/` (brand, layouts, PowerPoint), `src/` (deck template, CSS theme, PowerPoint helper, build and render scripts), `assets/` (official brand SVG/PNG files) |
+| `skills/gw-presentation/` | The skill: `SKILL.md`, `LICENSE.md`, `references/` (brand, layouts, PowerPoint), `src/` (deck template, CSS theme, PowerPoint helper, build, render and font-install scripts), `assets/` (official brand SVG/PNG files, and pre-rendered images for PowerPoint), `fonts/` (the free substitute fonts) |
 | `examples/` | Sample decks: `what-is-a-skill/` (HTML) and `reproducible-research/` (HTML, plus PowerPoint with its build script), made with the current skill; `skill-workflow/` and `early-test/` (April 2026 versions, with the original PowerPoint scripts) |
 | `LICENSE.md`, `LICENSES/`, `REUSE.toml` | Licensing: summary, full license texts, and the per-file record |
 | `docs/HISTORY.md` | Project log of how the skill was built |

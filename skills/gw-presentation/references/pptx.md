@@ -24,7 +24,7 @@ Use `fonts: 'brand'` (default) or `fonts: 'substitutes'`. The helper adjusts dis
 
 ## Setup and quick start
 
-Needs Node 18+, `npm install pptxgenjs` in a working folder (not in the skill), and Google Chrome or Chromium (the helper renders SVG fallback images and the star texture with it). Put the deck script anywhere, `require` the helper by its absolute path, and **run the script from the working folder** — the helper loads PptxGenJS from the current directory.
+Needs Node 18+ and pptxgenjs — `npm install pptxgenjs` in a working folder (not in the skill), or a global install. No browser is needed: the SVG fallback images and star textures come pre-rendered in `assets/pptx/`. Chrome is used only if you recolor an SVG in a custom slide; without it the helper warns and leaves that image's fallback out. Put the deck script anywhere, `require` the helper by its absolute path, and **run the script from the working folder** — the helper loads PptxGenJS from the current directory.
 
 ```js
 // talk.js — run with: node talk.js
@@ -149,6 +149,8 @@ python3 src/render_pptx.py talk.pptx
 ```
 
 It converts with LibreOffice if installed, otherwise with Microsoft PowerPoint on macOS (exactly what the presenter sees, brand fonts included), and prints one PNG per slide plus a contact sheet. Look for text running out of its box, overlaps, wrapping, and orphaned words; shorten text or adjust sizes and rebuild.
+
+**Without the brand fonts** (a cloud sandbox), don't check the brand-font file — LibreOffice would show unrelated fallback fonts. Build the same deck a second time with `fonts: 'substitutes'` and check that one; deliver the brand-font file. The substitutes set wider than the brand fonts in display, accent, and label text, so anything that fits in the check fits for the presenter; leave body text a line of room, since Nunito Sans sets ~3% narrower than Avenir Next. The script warns if you render a brand-font deck where the brand fonts are missing, and exits with status 3 ("NOT RENDERED") if it has no converter — then say the deck wasn't visually checked.
 
 Renders don't show empty placeholders (PowerPoint never prints prompt text), so a photo-placeholder slide renders as its background — that's expected.
 

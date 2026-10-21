@@ -1,16 +1,17 @@
 # Licensing
 
-This skill holds three kinds of material under three different terms.
+This skill holds four kinds of material under different terms.
 
 | Material | Files | License |
 |---|---|---|
 | **Code** | `src/` (scripts, deck template, CSS theme) | BSD 3-Clause — full text below |
 | **Text and design** | `SKILL.md`, `references/` | [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/legalcode) |
-| **GW brand assets** | `assets/` (logos and graphic elements) | **Not licensed by this skill:** © The George Washington University, all rights reserved — notice below |
+| **Free fonts** | `fonts/` (Barlow Condensed, Nunito Sans, Source Serif 4, Oswald) | SIL Open Font License 1.1 — each family's copyright and license in its `OFL-*.txt` file |
+| **GW brand assets** | `assets/` (logos and graphic elements, and the pre-rendered images in `assets/pptx/`) | **Not licensed by this skill:** © The George Washington University, all rights reserved — notice below |
 
 Copyright © 2026 Lorena A. Barba for the code and the text and design. Source and full license texts: https://github.com/gw-ospo/gw-presentation
 
-Presentations you create with this skill are yours; any GW logos and graphic elements in them remain the university's, under the GW brand guidelines. The brand fonts, the free substitute fonts (Google Fonts, SIL Open Font License), and PptxGenJS (npm, MIT License) are not part of this skill.
+Presentations you create with this skill are yours; any GW logos and graphic elements in them remain the university's, under the GW brand guidelines. The Adobe brand fonts and PptxGenJS (npm, MIT License) are not part of this skill.
 
 ## BSD 3-Clause License (code)
 

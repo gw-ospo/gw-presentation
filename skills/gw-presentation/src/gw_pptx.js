@@ -24,10 +24,12 @@ const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const PptxGenJS = requireFromCwd('pptxgenjs');
-const JSZip = requireFromCwd('jszip');   // installed with pptxgenjs
+let PptxGenJS, JSZip;   // loaded on first createDeck(), so `--make-images` works without them
 
 const ASSETS = path.join(__dirname, '..', 'assets');
+// Images PowerPoint can't make from the SVGs itself, rendered once (node src/gw_pptx.js --make-images)
+// so building a deck needs no browser.
+const PRERENDERED = path.join(ASSETS, 'pptx');
 
 // ── Brand ────────────────────────────────────────────────────────────────────
 const C = {
@@ -37,6 +39,7 @@ const C = {
 };
 // Tone-on-tone star pattern: slide background → star color one step away (references/brand.md §4)
 const STAR_ON = { [C.navyYard]: 'gw-blue', [C.gwBlue]: 'navy-yard', [C.white]: 'gw-buff-20' };
+const BG_NAME = { [C.navyYard]: 'navy-yard', [C.gwBlue]: 'gw-blue', [C.white]: 'white' };
 const FONTS = {
   brand:       { display: 'Gazzetta', displayItalic: 'Gazzetta Slanted', body: 'Avenir Next',
                  accent: 'Source Serif Pro', displayBold: false, italicFlag: false, scale: 1 },
@@ -104,6 +107,8 @@ function createDeck({ title = 'GW presentation', author = '', company = 'The Geo
   if (![null, 'chevrons', 'stars'].includes(pattern)) throw new Error(`pattern must be 'chevrons', 'stars', or null`);
   const F = FONTS[fonts];
   const d = (pt) => Math.round(pt * F.scale);
+  PptxGenJS = PptxGenJS || requirePackage('pptxgenjs');
+  JSZip = JSZip || requirePackage('jszip');   // installed with pptxgenjs
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_16x9';
   Object.assign(pptx, { title, author, company });
@@ -127,8 +132,9 @@ function createDeck({ title = 'GW presentation', author = '', company = 'The Geo
   }
   for (const [name, spec] of Object.entries(layoutSpecs(F))) defineLayout(name, spec);
 
-  const svgSources = new Map();   // SVG text (no prolog) → temp file, for the PNG fallbacks
+  const svgSources = new Map();   // SVG text (no prolog) → { file: temp copy, src: asset path, fill }
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gw-pptx-'));
+  const warnings = [];
   let count = 0;
 
   // ── low-level helpers ──
@@ -149,9 +155,9 @@ function createDeck({ title = 'GW presentation', author = '', company = 'The Geo
     if (!svgSources.has(key)) {
       const out = path.join(tmp, `svg-${svgSources.size}.svg`);
       fs.writeFileSync(out, markup);
-      svgSources.set(key, out);
+      svgSources.set(key, { file: out, src: file, fill });
     }
-    sl.addImage({ path: svgSources.get(key), ...box });
+    sl.addImage({ path: svgSources.get(key).file, ...box });
   }
   function ribbon(sl, color = C.gwBuff) {
     const name = color === C.gwBuff ? 'gw-buff' : color === C.gwBlue ? 'gw-blue' : 'potomac';
@@ -161,7 +167,8 @@ function createDeck({ title = 'GW presentation', author = '', company = 'The Geo
     }
   }
   function stars(sl, bg, edge = 'right') {
-    const png = starPatternPng(tmp, STAR_ON[bg], bg, edge);
+    const png = starTexture(bg, edge, tmp, warnings);
+    if (!png) return;
     sl.addImage({ path: png, x: edge === 'right' ? SW * 0.45 : 0, y: 0, w: SW * 0.55, h: SH, altText: '' });
   }
   function logo(sl, dark, corner) {
@@ -338,11 +345,12 @@ function createDeck({ title = 'GW presentation', author = '', company = 'The Geo
       await gwTheme(zip);
       await fixLayouts(zip, specs);
       await fixSlidePictures(zip);
-      await svgFallbacks(zip, svgSources, tmp);
+      await svgFallbacks(zip, svgSources, tmp, warnings);
       fs.mkdirSync(path.dirname(path.resolve(file)), { recursive: true });
       fs.writeFileSync(file, await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }));
       fs.rmSync(tmp, { recursive: true, force: true });
-      return { file, slides: count };
+      for (const w of warnings) console.warn(`gw_pptx warning: ${w}`);
+      return { file, slides: count, warnings };
     },
   };
   return deck;
@@ -428,9 +436,10 @@ async function dropLayout(zip, f) {
   zip.remove(`ppt/slideLayouts/_rels/${base}.rels`);
 }
 
-async function svgFallbacks(zip, sources, tmp) {
+async function svgFallbacks(zip, sources, tmp, warnings) {
   // PptxGenJS can't rasterize SVGs in Node and writes a broken-image PNG as each SVG's
-  // fallback; viewers without SVG support show that. Swap in real renders.
+  // fallback; viewers without SVG support show that. Swap in the pre-rendered PNG, or render
+  // one with Chrome for recolored SVGs.
   const byKey = sources;
   const cache = new Map();
   const relFiles = Object.keys(zip.files).filter((f) => /^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/.test(f));
@@ -443,20 +452,46 @@ async function svgFallbacks(zip, sources, tmp) {
       const key = (await zip.file(`ppt/media/${r.file}`).async('string')).replace(/^\s*<\?xml[^>]*\?>\s*/, '').trim();
       const src = byKey.get(key);
       if (!src) continue;
-      if (!cache.has(src)) cache.set(src, rasterizeSvg(src, tmp));
-      zip.file(`ppt/media/${png.file}`, cache.get(src));
+      if (!cache.has(src.file)) cache.set(src.file, svgFallbackPng(src, tmp, warnings));
+      if (cache.get(src.file)) zip.file(`ppt/media/${png.file}`, cache.get(src.file));
     }
   }
 }
 
 // ── Chrome rasterizing ───────────────────────────────────────────────────────
+function prerenderedName(src, fill) {
+  // assets/chevrons/ribbon/gw-buff.svg → assets/pptx/ribbon-gw-buff.png (unrecolored SVGs only)
+  if (fill) return null;
+  return path.join(PRERENDERED, `${path.basename(path.dirname(src))}-${path.basename(src, '.svg')}.png`);
+}
+
+function svgFallbackPng(src, tmp, warnings) {
+  const pre = prerenderedName(src.src, src.fill);
+  if (pre && fs.existsSync(pre)) return fs.readFileSync(pre);
+  if (!findChrome()) {
+    warnings.push(`no pre-rendered image for ${path.basename(src.src)}${src.fill ? ` recolored ${src.fill}` : ''} and no Chrome to ` +
+      'render one: PowerPoint shows the SVG fine, but viewers without SVG support will show a broken image');
+    return null;
+  }
+  return rasterizeSvg(src.file, tmp);
+}
+
+function starTexture(bg, edge, tmp, warnings) {
+  const pre = path.join(PRERENDERED, `stars-on-${BG_NAME[bg]}-${edge}.png`);
+  if (fs.existsSync(pre)) return pre;
+  if (!findChrome()) {
+    warnings.push(`no pre-rendered star texture for a ${BG_NAME[bg]} slide (${edge} edge) and no Chrome to render one: pattern left out`);
+    return null;
+  }
+  return starPatternPng(tmp, STAR_ON[bg], bg, edge);
+}
+
 function findChrome() {
   if (process.env.CHROME) return process.env.CHROME;
   const candidates = ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    '/Applications/Chromium.app/Contents/MacOS/Chromium', '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
-  const found = candidates.find((c) => fs.existsSync(c));
-  if (!found) throw new Error('Chrome not found; set CHROME=/path/to/chrome');
-  return found;
+    '/Applications/Chromium.app/Contents/MacOS/Chromium', '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium', '/usr/bin/chromium-browser'];
+  return candidates.find((c) => fs.existsSync(c)) || null;
 }
 
 function screenshot(html, pngPath, w, h, tmp) {
@@ -465,7 +500,9 @@ function screenshot(html, pngPath, w, h, tmp) {
   for (let attempt = 1; attempt <= 3; attempt++) {
     const profile = fs.mkdtempSync(path.join(tmp, 'profile-'));   // a shared profile can hang Chrome
     try {
-      execFileSync(findChrome(), ['--headless=new', '--disable-gpu', '--hide-scrollbars', `--user-data-dir=${profile}`,
+      const chrome = findChrome();
+      if (!chrome) throw new Error('Chrome not found; set CHROME=/path/to/chrome');
+      execFileSync(chrome, ['--headless=new', '--disable-gpu', '--hide-scrollbars', `--user-data-dir=${profile}`,
         '--no-first-run', '--no-default-browser-check', '--default-background-color=00000000',
         '--force-device-scale-factor=2', '--virtual-time-budget=3000',   // let data: images decode first
         `--window-size=${w},${h}`, `--screenshot=${pngPath}`, `file://${page}`],
@@ -507,13 +544,36 @@ function starPatternPng(tmp, fill, bg, edge) {
     png, w, h, tmp);
 }
 
-function requireFromCwd(name) {
-  // Resolve npm packages from the folder the deck script runs in (where `npm install pptxgenjs` was run).
-  try {
-    return require(require.resolve(name, { paths: [process.cwd()] }));
-  } catch (e) {
-    throw new Error(`Cannot load '${name}'. Run \`npm install pptxgenjs\` in ${process.cwd()} first.`);
+function requirePackage(name) {
+  // Look in the folder the deck script runs from (where `npm install pptxgenjs` was run), then
+  // the usual Node paths (NODE_PATH), then the global npm folder (sandboxes that preinstall it).
+  const tries = [() => require.resolve(name, { paths: [process.cwd()] }), () => require.resolve(name),
+    () => require.resolve(name, { paths: [execFileSync('npm', ['root', '-g'], { encoding: 'utf8' }).trim()] })];
+  for (const t of tries) {
+    try { return require(t()); } catch (e) { /* next */ }
   }
+  throw new Error(`Cannot load '${name}'. Run \`npm install pptxgenjs\` in ${process.cwd()} (or install it globally).`);
 }
+
+// ── Pre-rendering (maintainers): node src/gw_pptx.js --make-images ─────────────
+function makeImages() {
+  fs.mkdirSync(PRERENDERED, { recursive: true });
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gw-pptx-make-'));
+  for (const kind of ['ribbon', 'chip']) {
+    for (const color of ['gw-blue', 'gw-buff', 'potomac']) {
+      const src = path.join(ASSETS, 'chevrons', kind, `${color}.svg`);
+      fs.writeFileSync(prerenderedName(src, null), rasterizeSvg(src, tmp));
+    }
+  }
+  for (const bg of [C.navyYard, C.gwBlue]) {
+    for (const edge of ['right', 'left']) {
+      fs.copyFileSync(starPatternPng(tmp, STAR_ON[bg], bg, edge), path.join(PRERENDERED, `stars-on-${BG_NAME[bg]}-${edge}.png`));
+    }
+  }
+  fs.rmSync(tmp, { recursive: true, force: true });
+  console.log(fs.readdirSync(PRERENDERED).map((f) => path.join(PRERENDERED, f)).join('\n'));
+}
+
+if (require.main === module && process.argv.includes('--make-images')) makeImages();
 
 module.exports = { createDeck, colors: C, layouts: Object.keys(layoutSpecs(FONTS.brand)) };

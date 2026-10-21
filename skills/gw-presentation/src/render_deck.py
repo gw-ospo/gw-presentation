@@ -15,7 +15,16 @@ Also writes <deck>-sheet.png, a contact sheet with one row per slide and one col
 font mode: look at it first, then open single slides at full size for detail. Check for
 overflow, overlap, wrapping, and contrast before delivering the deck.
 
-Chrome is found at the usual macOS/Linux locations, or set CHROME=/path/to/chrome.
+Chrome is found at the usual macOS/Linux locations (including a Playwright download), or set
+CHROME=/path/to/chrome. Without a browser the script exits with status 3 and says so: the deck
+is fine, but it hasn't been looked at — tell the user it wasn't visually checked.
+
+Without the brand fonts (a cloud machine, say), brand mode would only repeat the substitute
+renders, so only those are made. They are a safe stand-in for brand-font line breaks in
+display, accent, and label text, which set wider with the substitutes; body text sets about 3%
+narrower in Nunito Sans than in Avenir Next, so leave body text a little room to spare.
+The bundled substitute fonts are installed first if needed (src/install_fonts.py), so renders
+look right even without access to Google Fonts.
 """
 import argparse
 import os
@@ -27,6 +36,9 @@ import tempfile
 from html import escape
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import install_fonts   # noqa: E402
+
 CHROME_CANDIDATES = [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
@@ -37,16 +49,39 @@ LOAD_BUDGET_MS = 6000   # time for Google Fonts and inlined images to load
 TIMEOUT_S = 45          # headless Chrome occasionally hangs; kill and retry after this
 ATTEMPTS = 3
 SHEET_SCALE = 0.5       # contact-sheet thumbnails are half size (640×360)
+NOT_RENDERED = 3        # exit status: tools missing, nothing rendered
 
 
 def find_chrome():
+    """Path to a Chrome/Chromium binary, or None."""
     if os.environ.get("CHROME"):
         return os.environ["CHROME"]
     for candidate in CHROME_CANDIDATES:
         path = candidate if os.path.isabs(candidate) else shutil.which(candidate)
         if path and os.path.exists(path):
             return path
-    sys.exit("Chrome not found; set CHROME=/path/to/chrome")
+    # Browsers downloaded by Playwright (`npx playwright install chromium` / `playwright install chromium`)
+    for cache in (Path.home() / ".cache/ms-playwright", Path.home() / "Library/Caches/ms-playwright"):
+        for path in sorted(cache.glob("chromium*/chrome-*/chrome"), reverse=True) + \
+                    sorted(cache.glob("chromium*/chrome-mac*/Chromium.app/Contents/MacOS/Chromium"), reverse=True):
+            if path.exists():
+                return str(path)
+    return None
+
+
+def not_rendered(reason):
+    """Stop without rendering, in words an agent can pass on to the user."""
+    print(f"NOT RENDERED: {reason}\nThe deck itself is complete, but it has not been checked visually. "
+          "Tell the user, and suggest they open it and look through every slide.", file=sys.stderr)
+    sys.exit(NOT_RENDERED)
+
+
+def has_brand_fonts():
+    """False when fontconfig shows no Gazzetta (Linux sandboxes); True otherwise (macOS can't tell)."""
+    if not shutil.which("fc-list"):
+        return True
+    out = subprocess.run(["fc-list", ":", "family"], capture_output=True, text=True).stdout
+    return "Gazzetta" in out
 
 
 def main():
@@ -63,7 +98,15 @@ def main():
     out = args.out.resolve() if args.out else Path(tempfile.mkdtemp(prefix=f"{deck.stem}-renders-"))
     out.mkdir(parents=True, exist_ok=True)
     chrome = find_chrome()
+    if not chrome:
+        not_rendered("no Chrome or Chromium found (set CHROME=/path/to/chrome, or install one, e.g. "
+                     "`npx playwright install chromium`)")
+    print(install_fonts.ensure(quiet=True), file=sys.stderr)
     modes = ["brand", "substitutes"] if args.fonts == "both" else [args.fonts]
+    if "brand" in modes and not has_brand_fonts():
+        modes = ["substitutes"]
+        print("brand fonts not installed here: rendering the substitute fonts only (a safe stand-in for "
+              "line breaks, except body text, which sets ~3% narrower than Avenir Next)", file=sys.stderr)
 
     pngs = {}
     for mode in modes:

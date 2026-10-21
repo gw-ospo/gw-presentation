@@ -1,12 +1,13 @@
 # Licensing
 
-This repository holds three kinds of material under three different terms. Every file's copyright and license is recorded in [`REUSE.toml`](REUSE.toml) in the [REUSE](https://reuse.software) format; run `reuse lint` to check it. The full license texts are in [`LICENSES/`](LICENSES/).
+This repository holds four kinds of material under different terms. Every file's copyright and license is recorded in [`REUSE.toml`](REUSE.toml) in the [REUSE](https://reuse.software) format; run `reuse lint` to check it. The full license texts are in [`LICENSES/`](LICENSES/).
 
 | Material | Examples | License |
 |---|---|---|
 | **Code** | the skill's scripts, deck template and CSS theme (`skills/gw-presentation/src/`), example build scripts | [BSD 3-Clause](LICENSES/BSD-3-Clause.txt) |
 | **Text and design** | `SKILL.md`, `references/`, this README and the docs, and the slide content and design of the example decks | [Creative Commons Attribution 4.0 International (CC BY 4.0)](LICENSES/CC-BY-4.0.txt) |
-| **GW brand assets** | logos and graphic elements in `skills/gw-presentation/assets/` and `source-assets/`, and copies of them embedded in the example decks | **Not licensed by this project:** © The George Washington University, all rights reserved; see [the notice](LICENSES/LicenseRef-GW-Brand-Assets.txt) |
+| **Free fonts** | `skills/gw-presentation/fonts/` | [SIL Open Font License 1.1](LICENSES/OFL-1.1.txt) — see [Bundled fonts](#bundled-fonts) |
+| **GW brand assets** | logos and graphic elements in `skills/gw-presentation/assets/` (including the pre-rendered images in `assets/pptx/`) and `source-assets/`, and copies of them embedded in the example decks | **Not licensed by this project:** © The George Washington University, all rights reserved; see [the notice](LICENSES/LicenseRef-GW-Brand-Assets.txt) |
 
 Copyright © 2026 Lorena A. Barba for the code and the text and design.
 
@@ -20,11 +21,14 @@ The GW logos and graphic elements belong to The George Washington University. Th
 
 "The George Washington University," "George Washington University," "GW," and the GW logos are trademarks of The George Washington University.
 
+## Bundled fonts
+
+`skills/gw-presentation/fonts/` contains the free substitute fonts — Barlow Condensed, Nunito Sans, Source Serif 4, and Oswald — unmodified except for simpler file names, under the [SIL Open Font License 1.1](LICENSES/OFL-1.1.txt). Each family's copyright and license is in its `OFL-*.txt` file next to the fonts. They are included so previews look right on machines without them.
+
 ## Not included here
 
-The project does not distribute, and does not license, any of these:
+The project does not distribute, and does not license, either of these:
 - **Brand fonts:** Gazzetta, Avenir Next and Source Serif, licensed through Adobe Fonts.
-- **Free substitute fonts:** loaded from Google Fonts under the SIL Open Font License.
 - **PptxGenJS:** installed from npm under the MIT License.
 
 ## Decks you make with the skill

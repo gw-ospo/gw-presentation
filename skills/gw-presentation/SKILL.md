@@ -26,9 +26,11 @@ Produce slide decks that are brand-coherent and audience-first. The goal is not 
 | `src/render_deck.py` | Checking a finished HTML deck — renders every slide to PNG in both font modes |
 | `src/gw_pptx.js` | Building PowerPoint — slide builders, GW layouts with placeholders, theme fonts and colors (Node + PptxGenJS) |
 | `src/render_pptx.py` | Checking a finished .pptx — renders every slide to PNG (LibreOffice, or PowerPoint on macOS) |
-| `assets/` | Official brand files: chevrons, six-pointed star pattern, logos |
+| `src/install_fonts.py` | Called by the render scripts; installs the bundled free fonts where they're missing |
+| `assets/` | Official brand files: chevrons, six-pointed star pattern, logos; `assets/pptx/` holds pre-rendered images for PowerPoint |
+| `fonts/` | The free substitute fonts (SIL Open Font License), for renders on machines without them |
 
-Run Python scripts from the skill directory with `python3` (standard library only). `render_deck.py`, the contact sheets, and `gw_pptx.js` need Google Chrome or Chromium; `gw_pptx.js` also needs `npm install pptxgenjs` in the folder the deck script runs from.
+Run Python scripts from the skill directory with `python3` (standard library only). Building needs no browser: HTML decks need only Python; PowerPoint decks need Node with pptxgenjs (`npm install pptxgenjs` in the folder the deck script runs from, or a global install). Checking needs Chrome or Chromium (HTML) or LibreOffice or PowerPoint (pptx).
 
 ## Workflow
 
@@ -133,6 +135,15 @@ python3 src/build_deck.py --title "…" --css layout.css --slides slides.html --
 ## PowerPoint output
 
 Read `references/pptx.md` first. In short: tell the user up front which fonts the file needs (brand or free substitutes — a .pptx can't fall back), write a short Node script that calls the slide builders in `src/gw_pptx.js` (`cover`, `stat`, `divider`, `tiles`, `close`, …), save, and check with `python3 src/render_pptx.py <deck.pptx>`. The helper puts patterns and logos in the right places and gives the file GW layouts, theme fonts, and theme colors, so slides added later in PowerPoint stay on brand. Do not use GW's official PowerPoint templates.
+
+## Working in a sandbox or cloud session
+
+Cloud machines usually lack the brand fonts, often lack a browser or LibreOffice, and may not reach Google Fonts. The skill still works there:
+
+- **The files you deliver are unaffected.** HTML decks pick the brand fonts on the viewer's machine; PowerPoint files name the brand fonts and show them wherever they're installed. Build for the presenter, not for the sandbox.
+- **Renders use the bundled free fonts**, installed automatically. Free-font renders are a safe stand-in for the brand fonts' line breaks in display, accent, and label text (the substitutes set wider), but body text sets about 3% narrower in Nunito Sans than in Avenir Next — leave every body text box at least a line of spare room.
+- **PowerPoint:** build the deck twice from the same script — `fonts: 'brand'` to deliver, `fonts: 'substitutes'` to render and check. Rendering the brand-font file without the brand fonts shows unrelated fallback fonts.
+- **When a render script exits with status 3 ("NOT RENDERED")**, a tool is missing. The deck is complete, but say plainly that it wasn't visually checked, and suggest the user look through every slide.
 
 ## Gotchas
 

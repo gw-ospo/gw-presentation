@@ -10,18 +10,31 @@ Usage:
 Converts to PDF with LibreOffice when `soffice` is available, otherwise with Microsoft
 PowerPoint on macOS (driven by AppleScript; the first run may ask to allow automation).
 PowerPoint renders exactly what the presenter will see, including locally installed brand
-fonts; LibreOffice may substitute fonts. PDF pages become PNGs with `pdftoppm` (poppler)
-or, on macOS, PDFKit via `swift`. The contact sheet needs Chrome (as render_deck.py does).
+fonts. PDF pages become PNGs with `pdftoppm` (poppler), the `pypdfium2` Python package, or,
+on macOS, PDFKit via `swift`. The contact sheet uses Chrome, or Pillow, or is skipped.
+
+Without a converter the script exits with status 3 and says so: tell the user the deck wasn't
+visually checked. The bundled substitute fonts are installed first if needed.
+
+LibreOffice can only show fonts the machine has. A deck built for the brand fonts, rendered
+where they aren't installed (a cloud machine), shows unrelated fallback fonts and misleading
+line breaks — the script warns. There, build a second copy with fonts: 'substitutes' and check
+that one: the substitutes set wider than the brand fonts in display, accent, and label text, so
+if it fits there it fits for the presenter; leave body text a little room (Nunito Sans sets
+~3% narrower than Avenir Next).
 """
 import argparse
+import re
 import shutil
+import zipfile
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from render_deck import contact_sheet, find_chrome   # noqa: E402
+from render_deck import contact_sheet, find_chrome, has_brand_fonts, not_rendered   # noqa: E402
+import install_fonts   # noqa: E402
 
 TIMEOUT_S = 180
 POWERPOINT_DIR = Path.home() / "Library/Containers/com.microsoft.Powerpoint/Data/gw-render"   # inside its sandbox
@@ -55,8 +68,16 @@ print(doc.pageCount)
 def to_pdf(pptx, work):
     soffice = shutil.which("soffice") or shutil.which("libreoffice")
     if soffice:
-        subprocess.run([soffice, "--headless", "--convert-to", "pdf", "--outdir", str(work), str(pptx)],
-                       check=True, timeout=TIMEOUT_S, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # A fresh profile: a shared or locked one makes headless LibreOffice hang in sandboxes
+        profile = Path(tempfile.mkdtemp(prefix="gw-lo-profile-"))
+        try:
+            subprocess.run([soffice, f"-env:UserInstallation={profile.as_uri()}", "--headless", "--norestore",
+                            "--convert-to", "pdf", "--outdir", str(work), str(pptx)],
+                           check=True, timeout=TIMEOUT_S, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+            not_rendered(f"LibreOffice failed to convert the deck ({e.__class__.__name__})")
+        finally:
+            shutil.rmtree(profile, ignore_errors=True)
         return work / (pptx.stem + ".pdf")
     if sys.platform == "darwin" and Path("/Applications/Microsoft PowerPoint.app").exists():
         POWERPOINT_DIR.mkdir(parents=True, exist_ok=True)
@@ -75,7 +96,7 @@ def to_pdf(pptx, work):
         shutil.move(str(pdf), work / pdf.name)
         src.unlink(missing_ok=True)
         return work / pdf.name
-    sys.exit("Need LibreOffice (soffice) or, on macOS, Microsoft PowerPoint to render a .pptx")
+    not_rendered("no LibreOffice (soffice) found, and no Microsoft PowerPoint (macOS) to fall back on")
 
 
 def to_pngs(pdf, out, stem):
@@ -91,8 +112,36 @@ def to_pngs(pdf, out, stem):
                        stdout=subprocess.DEVNULL)
         script.unlink()
     else:
-        sys.exit("Need pdftoppm (poppler) or, on macOS, swift to turn the PDF into images")
+        try:
+            import pypdfium2   # preinstalled in some sandboxes, e.g. the Claude API container
+        except ImportError:
+            not_rendered("no way to turn the PDF into images: install poppler (pdftoppm) or `pip install pypdfium2`")
+        doc = pypdfium2.PdfDocument(str(pdf))
+        for i, page in enumerate(doc, 1):
+            page.render(scale=1280 / page.get_width()).to_pil().save(out / f"{stem}-s{i:02d}.png")
     return sorted(out.glob(f"{stem}-s[0-9][0-9].png"))
+
+
+def names_brand_fonts(pptx):
+    """True when the deck's theme uses the brand fonts (built with fonts: 'brand')."""
+    with zipfile.ZipFile(pptx) as z:
+        theme = z.read("ppt/theme/theme1.xml").decode("utf-8", "replace")
+    return bool(re.search(r'<a:majorFont><a:latin typeface="Gazzetta"', theme))
+
+
+def pillow_sheet(stem, out, pngs):
+    """Contact sheet without a browser, if Pillow is installed; otherwise None."""
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
+    w, h, pad = 640, 360, 16
+    sheet = Image.new("RGB", (w + 2 * pad, len(pngs) * (h + pad) + pad), (221, 216, 208))
+    for i, png in enumerate(pngs):
+        sheet.paste(Image.open(png).convert("RGB").resize((w, h)), (pad, pad + i * (h + pad)))
+    path = out / f"{stem}-sheet.png"
+    sheet.save(path)
+    return path
 
 
 def main():
@@ -104,14 +153,21 @@ def main():
     deck = args.deck.resolve()
     out = args.out.resolve() if args.out else Path(tempfile.mkdtemp(prefix=f"{deck.stem}-renders-"))
     out.mkdir(parents=True, exist_ok=True)
+    print(install_fonts.ensure(quiet=True), file=sys.stderr)
+    uses_soffice = bool(shutil.which("soffice") or shutil.which("libreoffice"))
+    if uses_soffice and names_brand_fonts(deck) and not has_brand_fonts():
+        print("WARNING: this deck uses the brand fonts, which aren't installed here; LibreOffice substitutes "
+              "unrelated fonts, so these renders don't show the presenter's line breaks. Check a copy built "
+              "with fonts: 'substitutes' instead (see references/pptx.md).", file=sys.stderr)
     pdf = to_pdf(deck, out)
     pngs = to_pngs(pdf, out, deck.stem)
     for png in pngs:
         print(png, flush=True)
     mode = "pptx"
-    sheet = contact_sheet(find_chrome(), deck.stem, out, len(pngs), [mode],
-                          {(i, mode): png for i, png in enumerate(pngs, 1)})
-    print(sheet, flush=True)
+    chrome = find_chrome()
+    sheet = (contact_sheet(chrome, deck.stem, out, len(pngs), [mode], {(i, mode): png for i, png in enumerate(pngs, 1)})
+             if chrome else pillow_sheet(deck.stem, out, pngs))
+    print(sheet if sheet else "no contact sheet (no Chrome or Pillow): look at the slide PNGs one by one", flush=True)
 
 
 if __name__ == "__main__":
