@@ -161,7 +161,7 @@ Official files are in `assets/`. Use them instead of CSS imitations. Their fills
 
 | Element | Files | CSS helper | Use |
 |---|---|---|---|
-| Chevron ribbon | `assets/chevrons/ribbon/{gw-blue,gw-buff,potomac}.svg` (159×12 tile) | `.chevron-ribbon` | Thin horizontal accent beneath a title or above a footer |
+| Chevron ribbon | `assets/chevrons/ribbon/{gw-blue,gw-buff,potomac}.svg` (156×12 seamless tile) | `.chevron-ribbon` | Thin horizontal accent beneath a title or above a footer |
 | Chevron chip | `assets/chevrons/chip/{gw-blue,gw-buff,potomac}.svg` (portrait, 3:4) | `.chevron-chip` | Anchor beside a pull quote or key stat |
 | Six-pointed star (battle flag) pattern | `assets/battle-flag/{gw-blue,gw-buff,potomac,blue-fog,white}.svg` (207.36×138.24 seamless tile) | `.star-pattern` | Background texture that bleeds off the slide edge |
 | Gate crossbar | — | `.gate-crossbar` (CSS fallback) | Single-line divider between text sections |

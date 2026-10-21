@@ -99,7 +99,7 @@ body {
   prints a url(...) value for background-image. Add --fill <color> to recolor.
 */
 
-/* Chevron ribbon (assets/chevrons/ribbon/, 159×12 tile). Always points right; never rotate or mirror. */
+/* Chevron ribbon (assets/chevrons/ribbon/, 156×12 tile — exactly 26 chevron periods, so it repeats seamlessly). Always points right; never rotate or mirror. */
 .chevron-ribbon {
   height: 12px;
   width: 100%;

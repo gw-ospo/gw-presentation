@@ -23,10 +23,11 @@ Produce slide decks that are brand-coherent and audience-first. The goal is not 
 | `src/build_deck.py` | Building any HTML deck — assembles template + theme + your layout CSS and slides, inlining assets |
 | `src/inline_asset.py` | Putting a brand SVG or logo PNG into a deck (base64 data URI; optional SVG recolor) |
 | `src/render_deck.py` | Checking a finished HTML deck — renders every slide to PNG in both font modes |
-| `src/build-pptx.js` | Building PowerPoint — a complete working PptxGenJS example |
+| `src/gw_pptx.js` | Building PowerPoint — slide builders, GW layouts with placeholders, theme fonts and colors (Node + PptxGenJS) |
+| `src/render_pptx.py` | Checking a finished .pptx — renders every slide to PNG (LibreOffice, or PowerPoint on macOS) |
 | `assets/` | Official brand files: chevrons, six-pointed star pattern, logos |
 
-Run scripts from the skill directory with `python3` (standard library only; `render_deck.py` needs Google Chrome or Chromium).
+Run Python scripts from the skill directory with `python3` (standard library only). `render_deck.py`, the contact sheets, and `gw_pptx.js` need Google Chrome or Chromium; `gw_pptx.js` also needs `npm install pptxgenjs` in the folder the deck script runs from.
 
 ## Workflow
 
@@ -35,7 +36,7 @@ Run scripts from the skill directory with `python3` (standard library only; `ren
 3. **Choose a layout per slide** from `references/layouts.md`, based on what the slide must do — not on how much content it has.
 4. **Pick one pattern family for the deck** (chevrons or six-pointed stars; see Graphic elements below) and one secondary accent color at most.
 5. **Build** the HTML deck with `src/build_deck.py` (default) or the PPTX (`references/pptx.md`).
-6. **Render and check:** `python3 src/render_deck.py <deck.html>`, then look at the contact sheet it prints (every slide, both font modes) and at single slides where needed, for text overflow, overlapping boxes, headline wrapping, contrast against the pairings table, and one element per slide. Fix and re-render before delivering.
+6. **Render and check:** `python3 src/render_deck.py <deck.html>` (PowerPoint: `python3 src/render_pptx.py <deck.pptx>`), then look at the contact sheet it prints and at single slides where needed, for text overflow, overlapping boxes, headline wrapping, contrast against the pairings table, and one element per slide. Fix and re-render before delivering.
 
 ## Philosophy: Presentation Zen first
 
@@ -130,7 +131,7 @@ python3 src/build_deck.py --title "…" --css layout.css --slides slides.html --
 
 ## PowerPoint output
 
-Read `references/pptx.md` first. In short: PptxGenJS, `LAYOUT_16x9` (10" × 5.625"), work natively in inches, brand `fontFace` names with substitutes as fallback, official SVGs from `assets/`, and tell the user up front which fonts they need installed. Do not use GW's official PowerPoint templates.
+Read `references/pptx.md` first. In short: tell the user up front which fonts the file needs (brand or free substitutes — a .pptx can't fall back), write a short Node script that calls the slide builders in `src/gw_pptx.js` (`cover`, `stat`, `divider`, `tiles`, `close`, …), save, and check with `python3 src/render_pptx.py <deck.pptx>`. The helper puts patterns and logos in the right places and gives the file GW layouts, theme fonts, and theme colors, so slides added later in PowerPoint stay on brand. Do not use GW's official PowerPoint templates.
 
 ## Gotchas
 
@@ -145,5 +146,5 @@ Mistakes that have actually happened building GW decks:
 - **Hyphenated words split at the hyphen** under `text-wrap: balance` ("know- / how"). Use a non-breaking hyphen (`&#8209;`) or wrap the word in `<span style="white-space: nowrap">`.
 - **Buff text on white** fails contrast (1.6:1). Make labels quieter with size and weight, not with pale color.
 - **Previewing a local deck in an embedded browser pane** may show a static snapshot with scripts disabled, so navigation looks broken. Open the file in a real browser, or serve it (`python3 -m http.server`) and open it via `localhost`.
-- **PPTX:** no `#` in colors, no 8-character hex, never reuse option objects, never convert pixel coordinates — see `references/pptx.md`.
+- **PPTX:** use the builders; for custom slides, no `#` in colors, no 8-character hex, never reuse option objects, never convert pixel coordinates, and add patterns before text — see `references/pptx.md`.
 - **Synced folders (Box, Dropbox, iCloud):** some tools fail reading files there with "Resource deadlock avoided"; copy the file to a temp directory first.
